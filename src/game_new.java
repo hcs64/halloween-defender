@@ -30,6 +30,8 @@ public class game_new extends RenderApplet{
 	int endGame = 0;
 	int reStart = 0;
 	int addLightCount = 0;
+	int turn = 0, leftKey = 0, rightKey = 0;
+	double turningAngle = 0;
 	Geometry box[][] = new Geometry[enemyNumber][2];
 	Geometry stalk[] = new Geometry[enemyNumber];
 	Geometry spring[] = new Geometry[springNumber*enemyNumber];
@@ -67,6 +69,39 @@ public class game_new extends RenderApplet{
 	int H, W;
 	int mouseX, mouseY;
 	AudioClip gunShot,blowup;
+	
+	
+	public boolean keyDown(Event evt, int key){
+		if (key == 'A' || key == 'a'){
+			leftKey = 1;
+			turn = -1;
+		}
+		else if (key == 'D' || key == 'd'){
+			rightKey = 1;
+			turn = 1;
+		}
+			
+		return true;
+	}
+	
+	public boolean keyUp(Event evt, int key){
+		if (key == 'A' || key == 'a'){
+			leftKey = 0;
+			if (rightKey == 0)
+				turn = 0;
+			else 
+				turn = 1;
+		}
+		else if (key == 'D' || key == 'd'){
+			rightKey = 0;
+			if (leftKey == 0)
+				turn = 0;
+			else 
+				turn = -1;
+		}
+			
+		return true;
+	}
 	
 	public boolean mouseDown(Event e, int x, int y) {
 		isCapturedClick = true;
@@ -419,10 +454,11 @@ public class game_new extends RenderApplet{
 	      boolean isMiss[] = new boolean[enemyNumber];
 	      double c = 0;
 	      double gunTheta, gunPhi;
-	      
+//	      int gunInit = 0;
 	      
 	   public void animate(double time) {
-
+//		   System.out.println(turn);
+		   turningAngle += turn * Math.PI/10;
 		   if(score >= levelScore){
 			   	  levelScore = levelScore + 20;
 				  bullet = 0;
@@ -431,6 +467,11 @@ public class game_new extends RenderApplet{
 				  getWorld().child = null;
 				  initialize();
 		   }
+		   m = getRenderer().getCamera();
+		   m.identity();
+		   m.rotateY(turningAngle);
+		   m = gun.getMatrix();
+		   m.rotateY(turn*Math.PI/10);
 		   if(totalBullet <=0 && endGame == 0){
 			   getWorld().child = null;
 			   
@@ -446,6 +487,7 @@ public class game_new extends RenderApplet{
 		    	bullet = 0;
 		    	totalBullet = 50;
 		    	level = 1;
+		    	turningAngle = 0;
 			   reStart = 0;
 			   endGame = 0;
 			   
@@ -683,8 +725,10 @@ public class game_new extends RenderApplet{
 	   public void setGun(double time){
 //		   	  gunTheta = -.3*Math.atan2(mouseX-800/2,50);
 //		      gunPhi = -.3*Math.atan2(mouseY-600/2, Math.sqrt(Math.pow((mouseX-800/2),2)+Math.pow(50, 2)));
+		   
 		      m = gun.getMatrix();
 		      m.identity();
+		      m.rotateY(-turningAngle);
 		      m.translate(0,-2, 3);
 //		      System.out.println(mouseX-W/2+" "+gunTheta+" "+W+" "+H);
 		      m.rotateY(gunTheta);

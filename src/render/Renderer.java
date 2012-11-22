@@ -196,7 +196,7 @@ public class Renderer
    }
 
    /**
-    * Sets whether the camera tries to maintain a "heads up" orientation.
+    * Sets whether the  tries to maintain a "heads up" orientation.
     * 
     * @param tf
     *            value true or false
