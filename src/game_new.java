@@ -36,6 +36,7 @@ public class game_new extends RenderApplet{
 	int shootEnergy = 8;
 	double reloadCount = 0;
 	double previousTime = 0;
+	static final double chargeRate = .15;
 	Geometry box[][] = new Geometry[enemyNumber][2];
 	Geometry stalk[] = new Geometry[enemyNumber];
 	Geometry spring[] = new Geometry[springNumber*enemyNumber];
@@ -253,8 +254,8 @@ public class game_new extends RenderApplet{
 	      }
 	      gunColor = new Material();
 	      gunColor.setAmbient(1, 1, 1);
-	      gunColor.setDiffuse(.5, .5, .5);
-	      gunColor.setSpecular(.8, .5, 0, 20);
+	      gunColor.setDiffuse(.2, .2, .2);
+	      gunColor.setSpecular(.5, .5, .5, 20);
 	      barrelColor = new Material();
 	      barrelColor.setAmbient(0, 1, 0);
 	      barrelColor.setDiffuse(0, 1, 0);
@@ -481,8 +482,8 @@ public class game_new extends RenderApplet{
 	      
 	   public void animate(double time) {
 //		   System.out.println(turn);
-//		   gunColor.setAmbient(gunEnergy/100, gunEnergy/100, gunEnergy/100);
-		   if (reloadCount >= .2){
+//		   gunColor.setAmbient(gunEnergy/100, 1, 1);
+		   if (reloadCount >= chargeRate){
 			   gunEnergy = Math.min(gunEnergy+1, 100);
 			   reloadCount = 0;
 		   }
@@ -830,21 +831,24 @@ public class game_new extends RenderApplet{
 	                  g.drawString("Final  Level: "+level, 200+100, 220+50);
 	              }else{ 
 	              
+	            	  for (int i=0;i<totalBullet;i++){
+	   	           	   g.setColor(new Color(Math.max(0,(255-3*i)),Math.min(255,0+3*i),0));
+	   	           	   g.fillRect(50+3*i, 70, 3, 14);
+	   	              }
+	   	              for (int i=0;i<gunEnergy;i++){
+	   		           	   g.setColor(new Color(200,Math.min(255,50+3*i),0));
+	   		           	   g.fillRect(50+3*i, 100, 3, 14);
+	   		          }
+		              g.setColor(Color.white);
+		              g.drawRect(50, 70, 300, 14);
+		              g.drawRect(50, 100, 300, 14);
+		              g.drawString("score to next level: "+levelScore, 50, 30);
+		              g.drawString("Score: "+score, 50, 50);
+		              g.drawString("Energy: "+gunEnergy, 60, 112);
+		              g.drawString("Life: "+ totalBullet, 60, 82);
+		              g.drawString("level: "+ level, 50, 130);
 	              
-	              g.drawString("score for next level: "+levelScore, 50, 30);
-	              g.drawString("your score: "+score, 50, 50);
-	              g.drawString("gun energy"+gunEnergy, 50, 110);
-	              g.drawString("life: "+ totalBullet, 50, 70);
-	              g.drawString("level: "+ level, 50, 90);
 	              
-	              for (int i=0;i<totalBullet;i++){
-	           	   g.setColor(new Color(Math.max(0,(255-3*i)),Math.min(255,0+3*i),0));
-	           	   g.fillRect(50+3*i, 70, 3, 10);
-	              }
-	              for (int i=0;i<gunEnergy;i++){
-		           	   g.setColor(new Color(0,Math.min(255,50+3*i),0));
-		           	   g.fillRect(50+3*i, 110, 3, 10);
-		              }
 	              
 	              if(totalBullet >0 && totalBullet <= 15){
 	                  g.drawString("Warning!! ", 280+120, 30);
@@ -899,7 +903,7 @@ public class game_new extends RenderApplet{
 		      gunRing1Color.setAmbient((time-c)*2, (time-c)*2, 0);
 		      gunRing2Color.setAmbient(0, (time-c)*2, 0);
 		      gunRing3Color.setAmbient(0, (time-c)*2, (time-c)*2);
-		      
+
 		    //set laser
 		      m = laser.getMatrix();
 		      m.identity();
