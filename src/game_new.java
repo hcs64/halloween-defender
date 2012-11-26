@@ -25,13 +25,17 @@ public class game_new extends RenderApplet{
 	int levelScore = 10;
 	int miss = 0;
 	int bullet = 0;
-	int totalBullet = 50;
+	int totalBullet = 100;
 	int level = 1;
 	int endGame = 0;
 	int reStart = 0;
 	int addLightCount = 0;
 	int turn = 0, leftKey = 0, rightKey = 0;
 	double turningAngle = 0;
+	int gunEnergy = 100;
+	int shootEnergy = 8;
+	double reloadCount = 0;
+	double previousTime = 0;
 	Geometry box[][] = new Geometry[enemyNumber][2];
 	Geometry stalk[] = new Geometry[enemyNumber];
 	Geometry spring[] = new Geometry[springNumber*enemyNumber];
@@ -108,33 +112,38 @@ public class game_new extends RenderApplet{
 	public boolean mouseDown(Event e, int x, int y) {
 		isCapturedClick = true;
 		if (endGame == 0){
-		bullet++;
-		totalBullet--;
-		g = queryCursor(point);
-		
-		shootTime = time;
-		gunTheta = -1*Math.atan2(point[0],-point[2]);
-	    gunPhi = 1*Math.atan2(point[1], Math.sqrt(Math.pow((point[0]),2)+Math.pow(-point[2], 2)));
-		
-		gunShot.play();
-		if (g == null)
-			return true;
-		for (int i=0;i<stalk.length;i++){
-			if((g==stalk[i] || g.isDescendant(box[i][1])) && isShoot[i] == false){
-				isShoot[i] = true;
-				clickTime[i] = time;
-				score=score+2;
-				totalBullet = totalBullet + 10;
-//				System.out.print("stalk shot");
-			}
-		}
-		for (int i=0;i<pumpkin.length;i++){
-				if (g.isDescendant(pumpkin[i]) && isShoot[(int)i/pumpkinNumber] == false){
-					isShoot[(int)i/pumpkinNumber] = true;
-					clickTime[(int)i/pumpkinNumber] = time;
-					score++;
+			if (gunEnergy >= shootEnergy){
+				gunEnergy -= shootEnergy;
+				bullet++;
+		//		totalBullet--;
+				g = queryCursor(point);
+				
+				shootTime = time;
+		//		gunTheta = -1*Math.atan2(point[0],-point[2]);
+		//	    gunPhi = 1*Math.atan2(point[1], Math.sqrt(Math.pow((point[0]),2)+Math.pow(-point[2], 2)));
+		//		
+				gunShot.play();
+				if (g == null)
+					return true;
+				for (int i=0;i<stalk.length;i++){
+					if((g==stalk[i] || g.isDescendant(box[i][1])) && isShoot[i] == false){
+						isShoot[i] = true;
+						clickTime[i] = time;
+						score=score+2;
+		//				totalBullet = totalBullet + 10;
+		//				System.out.print("stalk shot");
+					}
+				}
+				for (int i=0;i<pumpkin.length;i++){
+					if (g.isDescendant(pumpkin[i]) && isShoot[(int)i/pumpkinNumber] == false){
+						isShoot[(int)i/pumpkinNumber] = true;
+						clickTime[(int)i/pumpkinNumber] = time;
+						score++;
+					}
 				}
 			}
+			else 
+				System.out.print("run out of energy");
 		}
 		return true;
 	}
@@ -349,11 +358,11 @@ public class game_new extends RenderApplet{
 	      	gunWing.setMaterial(gunWingColor);
 	      	laser.setMaterial(laserColor);
 	      	
-	      	wall = getWorld().add().cube();
+	      	wall = getWorld().add().torus(16, 16, .2);
 	      	wall.setMaterial(wallColor);
 	      	ground = getWorld().add().cube();
 	      	ground.setMaterial(groundColor);
-	      	line = getWorld().add().cube();
+	      	line = getWorld().add().torus(8, 8, .2);
 	      	line.setMaterial(lineColor);
 	      //the Hierarchy of the enemy
 	      //cube for box->first torus for spring->rest toruses for spring->all spheres for pumpkin->cylinder for stalk
@@ -470,14 +479,25 @@ public class game_new extends RenderApplet{
 	      
 	   public void animate(double time) {
 //		   System.out.println(turn);
+//		   gunColor.setAmbient(gunEnergy/100, gunEnergy/100, gunEnergy/100);
+		   if (reloadCount >= .2){
+			   gunEnergy = Math.min(gunEnergy+1, 100);
+			   reloadCount = 0;
+		   }
+		   reloadCount = reloadCount + time - previousTime;
+		   previousTime = time;
+		   
 		   turningAngle += turn * Math.PI/10;
 		   if(score >= levelScore){
-			   	  levelScore = levelScore + 20;
-				  bullet = 0;
-				  totalBullet = totalBullet + 20;
-				  level++;
+			   	  
 				  getWorld().child = null;
 				  initialize();
+				  levelScore = levelScore + 20;
+				  bullet = 0;
+//				  totalBullet = totalBullet + 20;
+				  totalBullet = 100;
+				  gunEnergy = 100;
+				  level++;
 		   }
 		   //rotate camera
 		   m = getRenderer().getCamera();
@@ -497,7 +517,7 @@ public class game_new extends RenderApplet{
 		    	levelScore = 10;
 		    	miss = 0;
 		    	bullet = 0;
-		    	totalBullet = 50;
+		    	totalBullet = 100;
 		    	level = 1;
 		    	turningAngle = 0;
 			   reStart = 0;
@@ -532,16 +552,18 @@ public class game_new extends RenderApplet{
 	    //setEnviornment
 	    m = line.getMatrix();
 	    m.identity();
-	    m.translate(0, -3, -5);
-	    m.scale(10,.5,.2);
+	    m.translate(0,-3, 0);
+	    m.rotateX(Math.PI/2);
+	    m.scale(10,10,5);
 	    m = wall.getMatrix();
 	    m.identity();
-	    m.translate(0, -3, -50);
-	    m.scale(100,100,.2);
+	    m.translate(0, -3, 0);
+	    m.rotateX(Math.PI/2);
+	    m.scale(60,60,200);
 	    m = ground.getMatrix();
 	    m.identity();
 	    m.translate(0, -3.5, 0);
-	    m.scale(100,.2,50);
+	    m.scale(100,.2,100);
 	      for (int i=0;i<box.length;i++){ // here is how the enemies move
 //	    	  m.scale(2);
 	    	  
@@ -732,77 +754,93 @@ public class game_new extends RenderApplet{
 	      }
 
 	   }
+	   Color C = new Color(255,255,255,100); 
+
 	   public void drawOverlay(Graphics g) {
-           g.setColor(Color.white);
-           //draw the front sight
-           g.drawOval(mouseX-50, mouseY-50, 100, 100);
-           g.drawLine(mouseX-50, mouseY, mouseX+50, mouseY);
-           g.drawLine(mouseX, mouseY-50, mouseX, mouseY+50);
-           g.setColor(Color.green);
-           if(endGame != 1){
-           g.fillOval((int)(150*1.0)-50+400, (int)(150*1.0)-110,100,100);
-           g.setColor(Color.RED);
-           for(int i=0; i<enemyNumber; i++){
-               if(box[i][0].isVisible == true){
-                   double tempDouble = (box[i][0].getMatrix().get(3, 0))*box[i][0].vertices[0][0] + 
-                   (box[i][0].getMatrix().get(3, 1))*box[i][0].vertices[0][1] +
-                   (box[i][0].getMatrix().get(3, 2))*box[i][0].vertices[0][2] +
-                   (box[i][0].getMatrix().get(3, 3))*box[i][0].vertices[0][3];
-                   
-                   g.fillOval((int)(((((box[i][0].getMatrix().get(0, 0))*box[i][0].vertices[0][0] + 
-                           (box[i][0].getMatrix().get(0, 1))*box[i][0].vertices[0][1] +
-                           (box[i][0].getMatrix().get(0, 2))*box[i][0].vertices[0][2] +
-                           (box[i][0].getMatrix().get(0, 3))*box[i][0].vertices[0][3])/tempDouble)*2.3 + 150)*1.0)+400, (int)(((((box[i][0].getMatrix().get(2, 0))*box[i][0].vertices[0][0] + 
-                           (box[i][0].getMatrix().get(2, 1))*box[i][0].vertices[0][1] +
-                           (box[i][0].getMatrix().get(2, 2))*box[i][0].vertices[0][2] +
-                           (box[i][0].getMatrix().get(2, 3))*box[i][0].vertices[0][3])/tempDouble)*0.8 + 150)*1.0)-60, 5, 5);
-               }
-           }
-//           for(int i=0; i<enemyNumber; i++){
-//               if(box[i][1].isVisible == true){
-//                   double tempDouble = (box[i][1].getMatrix().get(3, 0))*box[i][1].vertices[0][0] + 
-//                   (box[i][1].getMatrix().get(3, 1))*box[i][1].vertices[0][1] +
-//                   (box[i][1].getMatrix().get(3, 2))*box[i][1].vertices[0][2] +
-//                   (box[i][1].getMatrix().get(3, 3))*box[i][1].vertices[0][3];
-//                   
-//                   g.fillOval((int)(((((box[i][1].getMatrix().get(0, 0))*box[i][1].vertices[0][0] + 
-//                           (box[i][1].getMatrix().get(0, 1))*box[i][1].vertices[0][1] +
-//                           (box[i][1].getMatrix().get(0, 2))*box[i][1].vertices[0][2] +
-//                           (box[i][1].getMatrix().get(0, 3))*box[i][1].vertices[0][3])/tempDouble)*2.3 + 150)*1.0)+400, (int)(((((box[i][1].getMatrix().get(2, 0))*box[i][1].vertices[0][0] + 
-//                           (box[i][1].getMatrix().get(2, 1))*box[i][1].vertices[0][1] +
-//                           (box[i][1].getMatrix().get(2, 2))*box[i][1].vertices[0][2] +
-//                           (box[i][1].getMatrix().get(2, 3))*box[i][1].vertices[0][3])/tempDouble)*0.8 + 150)*1.0)-60, 5, 5);
-//               }
-//           }
-           g.setColor(Color.white);
-           g.fillOval((int)(145*1.0)+400, (int)(150*1.0)-60, 5, 5);
+	              g.setColor(Color.white);
+	              //draw the front sight
+	              g.drawOval(mouseX-50, mouseY-50, 100, 100);
+	              g.drawLine(mouseX-50, mouseY, mouseX+50, mouseY);
+	              g.drawLine(mouseX, mouseY-50, mouseX, mouseY+50);
+	              if(endGame != 1){
+	              g.setColor(C);
+	              g.fillOval((int)(150*1.0)-50+400+180, (int)(150*1.0)-110-20,100,100);
+	              g.setColor(Color.green);
+	              g.fillArc((int)(150*1.0)-50+400+180, (int)(150*1.0)-110-20, 100, 100, 135-(int)(turningAngle/Math.PI*360/2), -90);
+	              //g.setColor(Color.RED);
+	              for(int i=0; i<enemyNumber; i++){
+	                  if(box[i][0].isVisible == true){
+	                      g.setColor(Color.RED);
+	                      double tempDouble = (box[i][0].getMatrix().get(3, 0))*box[i][0].vertices[0][0] + 
+	                      (box[i][0].getMatrix().get(3, 1))*box[i][0].vertices[0][1] +
+	                      (box[i][0].getMatrix().get(3, 2))*box[i][0].vertices[0][2] +
+	                      (box[i][0].getMatrix().get(3, 3))*box[i][0].vertices[0][3];
+	                      
+	                      g.fillOval((int)(((((box[i][0].getMatrix().get(0, 0))*box[i][0].vertices[0][0] + 
+	                              (box[i][0].getMatrix().get(0, 1))*box[i][0].vertices[0][1] +
+	                              (box[i][0].getMatrix().get(0, 2))*box[i][0].vertices[0][2] +
+	                              (box[i][0].getMatrix().get(0, 3))*box[i][0].vertices[0][3])/tempDouble)*2.3 + 150)*1.0)+400+180, (int)(((((box[i][0].getMatrix().get(2, 0))*box[i][0].vertices[0][0] + 
+	                              (box[i][0].getMatrix().get(2, 1))*box[i][0].vertices[0][1] +
+	                              (box[i][0].getMatrix().get(2, 2))*box[i][0].vertices[0][2] +
+	                              (box[i][0].getMatrix().get(2, 3))*box[i][0].vertices[0][3])/tempDouble)*0.8 + 150)*1.0)-60-20, 5, 5);
+	                  } if(box[i][1].isVisible == true){
+	                      g.setColor(Color.blue);
+	                      double tempDouble = (box[i][0].getMatrix().get(3, 0))*box[i][0].vertices[0][0] + 
+	                      (box[i][0].getMatrix().get(3, 1))*box[i][0].vertices[0][1] +
+	                      (box[i][0].getMatrix().get(3, 2))*box[i][0].vertices[0][2] +
+	                      (box[i][0].getMatrix().get(3, 3))*box[i][0].vertices[0][3];
+	                      
+	                      g.fillOval((int)(((((box[i][0].getMatrix().get(0, 0))*box[i][0].vertices[0][0] + 
+	                              (box[i][0].getMatrix().get(0, 1))*box[i][0].vertices[0][1] +
+	                              (box[i][0].getMatrix().get(0, 2))*box[i][0].vertices[0][2] +
+	                              (box[i][0].getMatrix().get(0, 3))*box[i][0].vertices[0][3])/tempDouble)*2.3 + 150)*1.0)+400+180, (int)(((((box[i][0].getMatrix().get(2, 0))*box[i][0].vertices[0][0] + 
+	                              (box[i][0].getMatrix().get(2, 1))*box[i][0].vertices[0][1] +
+	                              (box[i][0].getMatrix().get(2, 2))*box[i][0].vertices[0][2] +
+	                              (box[i][0].getMatrix().get(2, 3))*box[i][0].vertices[0][3])/tempDouble)*0.8 + 150)*1.0)-60-20, 5, 5);
+	                  }
+	                  
+	                  
+	              }
+	              g.setColor(Color.green);
+	              g.fillOval((int)(145*1.0)+400+180+2, (int)(150*1.0)-60-20-1, 5, 5);
 
-           }
-           
-           if( endGame == 1 ){
-               g.setFont(bigFont);
-               g.setColor(Color.cyan);
-               g.fillRect(0, 0, 100, 50);
-               g.setColor(Color.black);
-               g.drawString("restart", 10, 30);
-               g.drawString("Game Over !", 210, 160);
-               g.drawString("Total Score: "+score, 200, 190);
-               g.drawString("Final  Level: "+level, 200, 220);
-           }else{ 
-           
-           
-           g.drawString("score for next level: "+levelScore, 50, 30);
-           g.drawString("your score: "+score, 50, 50);
-           g.drawString("total bullet: "+ totalBullet, 50, 70);
-           g.drawString("level: "+ level, 50, 90);
-           
-           if(totalBullet >0 && totalBullet <= 15){
-               g.drawString("Warning!! ", 280, 30);
-               g.drawString("Run Out of Bullets!! ", 250, 50);
-           }
-           }
-       }
+	              }
+	              
+	              if( endGame == 1 ){
+	                  g.setFont(bigFont);
+	                  g.setColor(Color.cyan);
+	                  g.fillRect(0, 0, 100, 50);
+	                  g.setColor(Color.black);
+	                  g.drawString("restart", 10, 30);
+	                  g.drawString("Game Over !", 210+100, 160+50);
+	                  g.drawString("Total Score: "+score, 200+100, 190+50);
+	                  g.drawString("Final  Level: "+level, 200+100, 220+50);
+	              }else{ 
+	              
+	              
+	              g.drawString("score for next level: "+levelScore, 50, 30);
+	              g.drawString("your score: "+score, 50, 50);
+	              g.drawString("gun energy"+gunEnergy, 50, 110);
+	              g.drawString("life: "+ totalBullet, 50, 70);
+	              g.drawString("level: "+ level, 50, 90);
+	              
+	              for (int i=0;i<totalBullet;i++){
+	           	   g.setColor(new Color(Math.max(0,(255-3*i)),Math.min(255,0+3*i),0));
+	           	   g.fillRect(50+3*i, 70, 3, 10);
+	              }
+	              for (int i=0;i<gunEnergy;i++){
+		           	   g.setColor(new Color(0,Math.min(255,50+3*i),0));
+		           	   g.fillRect(50+3*i, 110, 3, 10);
+		              }
+	              
+	              if(totalBullet >0 && totalBullet <= 15){
+	                  g.drawString("Warning!! ", 280+120, 30);
+	                  g.drawString("life is low!! ", 250+120, 50);
+	              }
+	              }
+	          }
 
+	   
 		
 	   public void setGun(double time){
 //		   	  gunTheta = -.3*Math.atan2(mouseX-800/2,50);
@@ -858,8 +896,8 @@ public class game_new extends RenderApplet{
 		    	  laser.setVisible(true);
 		      else {
 		    	  laser.setVisible(false);
-			   	  gunTheta = -.2*Math.atan2(mouseX-800/2,50);
-			      gunPhi = -.2*Math.atan2(mouseY-600/2, Math.sqrt(Math.pow((mouseX-800/2),2)+Math.pow(50, 2)));
+			   	  gunTheta = -.2*Math.atan2(mouseX-800/2,80);
+			      gunPhi = -.2*Math.atan2(mouseY-600/2, Math.sqrt(Math.pow((mouseX-800/2),2)+Math.pow(80, 2)));
 		      }
 	   }
 
