@@ -25,13 +25,17 @@ public class game_new extends RenderApplet{
 	int levelScore = 10;
 	int miss = 0;
 	int bullet = 0;
-	int totalBullet = 50;
+	int totalBullet = 100;
 	int level = 1;
 	int endGame = 0;
 	int reStart = 0;
 	int addLightCount = 0;
 	int turn = 0, leftKey = 0, rightKey = 0;
 	double turningAngle = 0;
+	int gunEnergy = 100;
+	int shootEnergy = 8;
+	double reloadCount = 0;
+	double previousTime = 0;
 	Geometry box[][] = new Geometry[enemyNumber][2];
 	Geometry stalk[] = new Geometry[enemyNumber];
 	Geometry spring[] = new Geometry[springNumber*enemyNumber];
@@ -106,33 +110,38 @@ public class game_new extends RenderApplet{
 	public boolean mouseDown(Event e, int x, int y) {
 		isCapturedClick = true;
 		if (endGame == 0){
-		bullet++;
-		totalBullet--;
-		g = queryCursor(point);
-		
-		shootTime = time;
-//		gunTheta = -1*Math.atan2(point[0],-point[2]);
-//	    gunPhi = 1*Math.atan2(point[1], Math.sqrt(Math.pow((point[0]),2)+Math.pow(-point[2], 2)));
-//		
-		gunShot.play();
-		if (g == null)
-			return true;
-		for (int i=0;i<stalk.length;i++){
-			if((g==stalk[i] || g.isDescendant(box[i][1])) && isShoot[i] == false){
-				isShoot[i] = true;
-				clickTime[i] = time;
-				score=score+2;
-				totalBullet = totalBullet + 10;
-//				System.out.print("stalk shot");
-			}
-		}
-		for (int i=0;i<pumpkin.length;i++){
-				if (g.isDescendant(pumpkin[i]) && isShoot[(int)i/pumpkinNumber] == false){
-					isShoot[(int)i/pumpkinNumber] = true;
-					clickTime[(int)i/pumpkinNumber] = time;
-					score++;
+			if (gunEnergy >= shootEnergy){
+				gunEnergy -= shootEnergy;
+				bullet++;
+		//		totalBullet--;
+				g = queryCursor(point);
+				
+				shootTime = time;
+		//		gunTheta = -1*Math.atan2(point[0],-point[2]);
+		//	    gunPhi = 1*Math.atan2(point[1], Math.sqrt(Math.pow((point[0]),2)+Math.pow(-point[2], 2)));
+		//		
+				gunShot.play();
+				if (g == null)
+					return true;
+				for (int i=0;i<stalk.length;i++){
+					if((g==stalk[i] || g.isDescendant(box[i][1])) && isShoot[i] == false){
+						isShoot[i] = true;
+						clickTime[i] = time;
+						score=score+2;
+		//				totalBullet = totalBullet + 10;
+		//				System.out.print("stalk shot");
+					}
+				}
+				for (int i=0;i<pumpkin.length;i++){
+					if (g.isDescendant(pumpkin[i]) && isShoot[(int)i/pumpkinNumber] == false){
+						isShoot[(int)i/pumpkinNumber] = true;
+						clickTime[(int)i/pumpkinNumber] = time;
+						score++;
+					}
 				}
 			}
+			else 
+				System.out.print("run out of energy");
 		}
 		return true;
 	}
@@ -458,14 +467,25 @@ public class game_new extends RenderApplet{
 	      
 	   public void animate(double time) {
 //		   System.out.println(turn);
+//		   gunColor.setAmbient(gunEnergy/100, gunEnergy/100, gunEnergy/100);
+		   if (reloadCount >= .2){
+			   gunEnergy = Math.min(gunEnergy+1, 100);
+			   reloadCount = 0;
+		   }
+		   reloadCount = reloadCount + time - previousTime;
+		   previousTime = time;
+		   
 		   turningAngle += turn * Math.PI/10;
 		   if(score >= levelScore){
-			   	  levelScore = levelScore + 20;
-				  bullet = 0;
-				  totalBullet = totalBullet + 20;
-				  level++;
+			   	  
 				  getWorld().child = null;
 				  initialize();
+				  levelScore = levelScore + 20;
+				  bullet = 0;
+//				  totalBullet = totalBullet + 20;
+				  totalBullet = 100;
+				  gunEnergy = 100;
+				  level++;
 		   }
 		   //rotate camera
 		   m = getRenderer().getCamera();
@@ -485,7 +505,7 @@ public class game_new extends RenderApplet{
 		    	levelScore = 10;
 		    	miss = 0;
 		    	bullet = 0;
-		    	totalBullet = 50;
+		    	totalBullet = 100;
 		    	level = 1;
 		    	turningAngle = 0;
 			   reStart = 0;
@@ -516,9 +536,12 @@ public class game_new extends RenderApplet{
 	    	  dx[i] = (i-enemyNumber/2)*8/(1+(time-runTime[i])/4); // set x; they are separated by there index and will closer to each other when they moving towards you 
 	    	  dz[i] = -50+2.5*(2*(time-runTime[i])-i); //moving outward
 	    	  if (dz[i] > -5){ // if one cross the bar
-	    		  if (isShoot[i] == false && isMiss[i] == false && box[i][0].isVisible == true && endGame == 0){
+	    		  if (isShoot[i] == false && isMiss[i] == false && endGame == 0){
 	    			  miss++;
-	    			  totalBullet = totalBullet-5;
+	    			  if (box[i][0].isVisible == true)
+	    				  totalBullet = totalBullet-5;
+	    			  else if (box[i][1].isVisible == true)
+	    				  totalBullet = totalBullet-10;
 	    			  isMiss[i] = true;
 	    		  }
 	    		  for (int j=0;j<pumpkinNumber;j++){
@@ -760,18 +783,22 @@ public class game_new extends RenderApplet{
 	              
 	              g.drawString("score for next level: "+levelScore, 50, 30);
 	              g.drawString("your score: "+score, 50, 50);
-	              g.drawString("total bullet: "+ totalBullet, 50, 70);
+	              g.drawString("gun energy"+gunEnergy, 50, 110);
+	              g.drawString("life: "+ totalBullet, 50, 70);
 	              g.drawString("level: "+ level, 50, 90);
 	              
 	              for (int i=0;i<totalBullet;i++){
-	           	   g.setColor(new Color(255-i,100+i,0));
+	           	   g.setColor(new Color(Math.max(0,(255-3*i)),Math.min(255,0+3*i),0));
 	           	   g.fillRect(50+3*i, 70, 3, 10);
 	              }
-	              
+	              for (int i=0;i<gunEnergy;i++){
+		           	   g.setColor(new Color(0,Math.min(255,50+3*i),0));
+		           	   g.fillRect(50+3*i, 110, 3, 10);
+		              }
 	              
 	              if(totalBullet >0 && totalBullet <= 15){
 	                  g.drawString("Warning!! ", 280+120, 30);
-	                  g.drawString("Run Out of Bullets!! ", 250+120, 50);
+	                  g.drawString("life is low!! ", 250+120, 50);
 	              }
 	              }
 	          }
