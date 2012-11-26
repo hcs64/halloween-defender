@@ -467,11 +467,11 @@ public class game_new extends RenderApplet{
 				  getWorld().child = null;
 				  initialize();
 		   }
+		   //rotate camera
 		   m = getRenderer().getCamera();
 		   m.identity();
 		   m.rotateY(turningAngle);
-		   m = gun.getMatrix();
-		   m.rotateY(turn*Math.PI/10);
+		   
 		   if(totalBullet <=0 && endGame == 0){
 			   getWorld().child = null;
 			   
@@ -693,35 +693,61 @@ public class game_new extends RenderApplet{
 
 	   }
 	   public void drawOverlay(Graphics g) {
-		   g.setColor(Color.white);
-		   //draw the front sight
-		   g.drawOval(mouseX-50, mouseY-50, 100, 100);
-		   g.drawLine(mouseX-50, mouseY, mouseX+50, mouseY);
-		   g.drawLine(mouseX, mouseY-50, mouseX, mouseY+50);
-		   if( endGame == 1 ){
-			   g.setFont(bigFont);
-			   g.setColor(Color.cyan);
-			   g.fillRect(0, 0, 100, 50);
-			   g.setColor(Color.black);
-			   g.drawString("restart", 10, 30);
-			   g.drawString("Game Over !", 210, 160);
-			   g.drawString("Total Score: "+score, 200, 190);
-			   g.drawString("Final  Level: "+level, 200, 220);
-		   }else{ 
-		   
-		   
-		   g.drawString("score for next level: "+levelScore, 50, 30);
-		   g.drawString("your score: "+score, 50, 50);
-		   g.drawString("total bullet: "+ totalBullet, 50, 70);
-		   g.drawString("level: "+ level, 50, 90);
-		   
-		   if(totalBullet >0 && totalBullet <= 15){
-			   g.drawString("Warning!! ", 480, 30);
-			   g.drawString("Run Out of Bullets!! ", 450, 50);
-		   }
-		   }
-	   }
-	   
+           g.setColor(Color.white);
+           //draw the front sight
+           g.drawOval(mouseX-50, mouseY-50, 100, 100);
+           g.drawLine(mouseX-50, mouseY, mouseX+50, mouseY);
+           g.drawLine(mouseX, mouseY-50, mouseX, mouseY+50);
+           g.setColor(Color.green);
+           if(endGame != 1){
+           g.fillOval((int)(150*1.0)-50+400, (int)(150*1.0)-110,100,100);
+           g.setColor(Color.RED);
+           for(int i=0; i<enemyNumber; i++){
+               if(box[i][0].isVisible == true || box[i][0].isVisible == true){
+                   double tempDouble = (box[i][0].getMatrix().get(3, 0))*box[i][0].vertices[0][0] + 
+                   (box[i][0].getMatrix().get(3, 1))*box[i][0].vertices[0][1] +
+                   (box[i][0].getMatrix().get(3, 2))*box[i][0].vertices[0][2] +
+                   (box[i][0].getMatrix().get(3, 3))*box[i][0].vertices[0][3];
+                   
+                   g.fillOval((int)(((((box[i][0].getMatrix().get(0, 0))*box[i][0].vertices[0][0] + 
+                           (box[i][0].getMatrix().get(0, 1))*box[i][0].vertices[0][1] +
+                           (box[i][0].getMatrix().get(0, 2))*box[i][0].vertices[0][2] +
+                           (box[i][0].getMatrix().get(0, 3))*box[i][0].vertices[0][3])/tempDouble)*2.3 + 150)*1.0)+400, (int)(((((box[i][0].getMatrix().get(2, 0))*box[i][0].vertices[0][0] + 
+                           (box[i][0].getMatrix().get(2, 1))*box[i][0].vertices[0][1] +
+                           (box[i][0].getMatrix().get(2, 2))*box[i][0].vertices[0][2] +
+                           (box[i][0].getMatrix().get(2, 3))*box[i][0].vertices[0][3])/tempDouble)*0.8 + 150)*1.0)-60, 5, 5);
+               }
+           }
+           g.setColor(Color.white);
+           g.fillOval((int)(145*1.0)+400, (int)(150*1.0)-60, 5, 5);
+
+           }
+           
+           if( endGame == 1 ){
+               g.setFont(bigFont);
+               g.setColor(Color.cyan);
+               g.fillRect(0, 0, 100, 50);
+               g.setColor(Color.black);
+               g.drawString("restart", 10, 30);
+               g.drawString("Game Over !", 210, 160);
+               g.drawString("Total Score: "+score, 200, 190);
+               g.drawString("Final  Level: "+level, 200, 220);
+           }else{ 
+           
+           
+           g.drawString("score for next level: "+levelScore, 50, 30);
+           g.drawString("your score: "+score, 50, 50);
+           g.drawString("total bullet: "+ totalBullet, 50, 70);
+           g.drawString("level: "+ level, 50, 90);
+           
+           if(totalBullet >0 && totalBullet <= 15){
+               g.drawString("Warning!! ", 280, 30);
+               g.drawString("Run Out of Bullets!! ", 250, 50);
+           }
+           }
+       }
+
+		
 	   public void setGun(double time){
 //		   	  gunTheta = -.3*Math.atan2(mouseX-800/2,50);
 //		      gunPhi = -.3*Math.atan2(mouseY-600/2, Math.sqrt(Math.pow((mouseX-800/2),2)+Math.pow(50, 2)));
