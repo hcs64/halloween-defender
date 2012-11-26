@@ -457,7 +457,7 @@ public class game_new extends RenderApplet{
 	      
 	      for (int i = 0; i < enemyNumber; i++)
 	      {
-	    	  respawn(i, 0);
+	    	  respawn(i, 1);
 	      }
 
 	   }
