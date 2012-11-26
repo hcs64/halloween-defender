@@ -785,18 +785,8 @@ public class game_new extends RenderApplet{
 	                              (box[i][0].getMatrix().get(2, 3))*box[i][0].vertices[0][3])/tempDouble)*0.8 + 150)*1.0)-60-20, 5, 5);
 	                  } if(box[i][1].isVisible == true){
 	                      g.setColor(Color.blue);
-	                      double tempDouble = (box[i][0].getMatrix().get(3, 0))*box[i][0].vertices[0][0] + 
-	                      (box[i][0].getMatrix().get(3, 1))*box[i][0].vertices[0][1] +
-	                      (box[i][0].getMatrix().get(3, 2))*box[i][0].vertices[0][2] +
-	                      (box[i][0].getMatrix().get(3, 3))*box[i][0].vertices[0][3];
 	                      
-	                      g.fillOval((int)(((((box[i][0].getMatrix().get(0, 0))*box[i][0].vertices[0][0] + 
-	                              (box[i][0].getMatrix().get(0, 1))*box[i][0].vertices[0][1] +
-	                              (box[i][0].getMatrix().get(0, 2))*box[i][0].vertices[0][2] +
-	                              (box[i][0].getMatrix().get(0, 3))*box[i][0].vertices[0][3])/tempDouble)*2.3 + 150)*1.0)+400+180, (int)(((((box[i][0].getMatrix().get(2, 0))*box[i][0].vertices[0][0] + 
-	                              (box[i][0].getMatrix().get(2, 1))*box[i][0].vertices[0][1] +
-	                              (box[i][0].getMatrix().get(2, 2))*box[i][0].vertices[0][2] +
-	                              (box[i][0].getMatrix().get(2, 3))*box[i][0].vertices[0][3])/tempDouble)*0.8 + 150)*1.0)-60-20, 5, 5);
+	                      g.fillOval((int)(dx[i]*2.3+150+400+180),(int)(dz[i]*0.8+150-60-20),5,5);
 	                  }
 	                  
 	                  
