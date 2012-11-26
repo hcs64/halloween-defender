@@ -70,6 +70,8 @@ public class game_new extends RenderApplet{
 	double runTime[] = new double[enemyNumber];
 	
 	static final double explodeTime = .25;	// how long a pumpkin takes to explode
+	static final double ghostTime = 10.;		// how long a ghost takes to approach
+	static final double startDist = 50.;		// distance from which enemies appear
 	Texture texture;
 	int H, W;
 	int mouseX, mouseY;
@@ -211,7 +213,9 @@ public class game_new extends RenderApplet{
 		    swingY = new double[enemyNumber];
 		    pop = 0;
 		    dx = new double[enemyNumber]; //moving formula of x-coordinate 
-		    dz = new double[enemyNumber]; //moving formula of z-coordinate 
+		    dz = new double[enemyNumber]; //moving formula of z-coordinate
+		    enemyAngle = new double[enemyNumber];
+		    enemySpeed = new double[enemyNumber];
 
 		    isMiss = new boolean[enemyNumber];
 		    c = 0;
@@ -450,6 +454,12 @@ public class game_new extends RenderApplet{
 	    	  {
 		    	  pumpkin[i*pumpkinNumber+j].setMaterial(pumpkinFadeColor[i]);
 	    	  }
+	      
+	      
+	      for (int i = 0; i < enemyNumber; i++)
+	      {
+	    	  respawn(i, 1);
+	      }
 
 	   }
 
@@ -460,6 +470,8 @@ public class game_new extends RenderApplet{
 	      double pop = 0;
 	      double dx[] = new double[enemyNumber]; //moving formula of x-coordinate 
 	      double dz[] = new double[enemyNumber]; //moving formula of z-coordinate 
+	      double enemyAngle[] = new double[enemyNumber];  // enemy's angle of attack
+	      double enemySpeed[] = new double[enemyNumber];
 //	      double runDu = 5;
 	      boolean isMiss[] = new boolean[enemyNumber];
 	      double c = 0;
@@ -528,36 +540,12 @@ public class game_new extends RenderApplet{
 	      
 	      if(bullet==0){
 	    	 int i;
-	    	 for(i=0; i<enemyNumber;i++)
-	    		 box[i][1].setVisible(false);
+	    	 
+	    	 //for(i=0; i<enemyNumber;i++)
+	    	//	 box[i][1].setVisible(false);
 	
 	      }
 	            
-	      for (int i=0;i<enemyNumber;i++){
-	    	  dx[i] = (i-enemyNumber/2)*8/(1+(time-runTime[i])/4); // set x; they are separated by there index and will closer to each other when they moving towards you 
-	    	  dz[i] = -50+2.5*(2*(time-runTime[i])-i); //moving outward
-	    	  if (dz[i] > -5){ // if one cross the bar
-	    		  if (isShoot[i] == false && isMiss[i] == false && endGame == 0){
-	    			  miss++;
-	    			  if (box[i][0].isVisible == true)
-	    				  totalBullet = totalBullet-5;
-	    			  else if (box[i][1].isVisible == true)
-	    				  totalBullet = totalBullet-10;
-	    			  isMiss[i] = true;
-	    		  }
-	    		  for (int j=0;j<pumpkinNumber;j++){
-		    		  pumpkin[i*pumpkinNumber+j].setVisible(false);
-		    		  spring[i*springNumber+j].setVisible(false);
-		    	  }
-		    	  stalk[i].setVisible(false);
-		    	  box[i][0].setVisible(false);
-		    	  box[i][1].setVisible(false);
-		    	  isShoot[i] = false;
-		    	  if (Math.random()<.08){ //they have 8% chance every frame to go back to the origin and appear again
-		    		  respawn(i, .7);
-		    	  }
-	    	  }
-	      }
 	      for (int i=0;i<enemyNumber;i++)
 	    	  swingY[i] = Y[i]*Math.cos(3*(time - swingTime)+Y[i]); //this is how they swing their head;
 	    pop = 0.5;
@@ -578,58 +566,107 @@ public class game_new extends RenderApplet{
 	    m.translate(0, -3.5, 0);
 	    m.scale(100,.2,100);
 	      for (int i=0;i<box.length;i++){ // here is how the enemies move
-	    	  m = box[i][0].getMatrix();
-	    	  m.identity();
 //	    	  m.scale(2);
 	    	  
-	    	  double t = 2*(time-runTime[i])-i;
-
-	    	  if (t < Math.PI){
-		    	  // first big bounce (from below playfield)
-	    		  m.translate(dx[i], 3*Math.abs(Math.sin(t))-7+4*t/Math.PI, dz[i]);
-	    	  } else {
-	    		  m.translate(dx[i], -3+3*Math.abs(Math.sin(t)), dz[i]);
-	    	  }
-	    	  m.scale(.5);
 	    	  
-		      //ghost
-		      m = box[i][1].getMatrix();
-		      m.identity();
-		      m.translate(dx[i], -3+3*Math.abs(Math.sin(2*time-runTime[i]+i)), dz[i]);
-		      m.rotateX(Math.PI/2);
-		      m.scale(1.2,1.1,1.5);
-		      m.scale(0.5);		      
-			  		  	
-			  	m = eye_r[i].getMatrix();
-			  	m.identity();
-			  	m.translate(0.35,0.8,-0.35);
-			  	m.scale(0.25,0.25,0.25);
-			  	
-			  	m = eye_l[i].getMatrix();
-			  	m.identity();
-			  	m.translate(-0.35,0.8,-0.35);
-			  	m.scale(0.25,0.25,0.25);
-			  	
-			  	m = shoulder_r[i].getMatrix();
-			  	m.identity();
-			  	m.translate(0.8, 0, -0.25);
-			  	
-			  	m = shoulder_l[i].getMatrix();
-			  	m.identity();
-			  	m.translate(-0.8, 0, -0.25);
-			  		  	
-			  	m = hand_r[i].getMatrix();
-			  	m.identity();
-			  	m.translate(0.4, 0.1, 0);
-		      	m.rotateY(Math.PI*8/12);
-		      	m.scale(0.3,0.25,0.60);
-		      	
-		    	m = hand_l[i].getMatrix();
-			  	m.identity();
-			  	m.translate(-0.4, 0.1, 0);
-		      	m.rotateY(-Math.PI*8/12);
-		      	m.scale(0.3,0.25,0.60);  	  	  
+	    	  
+	    	  if (box[i][0].isVisible) {
+	    		  // pumpkin movements
+	    		  
+	    		  double t = 2*(time-runTime[i])-i;
+	    		  
+		    	  dx[i] = (i-enemyNumber/2)*8/(1+(time-runTime[i])/4); // set x; they are separated by there index and will closer to each other when they moving towards you 
+		    	  dz[i] = -startDist+2.5*(2*(time-runTime[i])-i); //moving outward
+
+		    	  m = box[i][0].getMatrix();
+		    	  m.identity();
+	
+		    	  if (t < Math.PI){
+			    	  // first big bounce (from below playfield)
+		    		  m.translate(dx[i], 3*Math.abs(Math.sin(t))-7+4*t/Math.PI, dz[i]);
+		    	  } else {
+		    		  m.translate(dx[i], -3+3*Math.abs(Math.sin(t)), dz[i]);
+		    	  }
+		    	  m.scale(.5);
+	    	  }
+	    	  
+	    	  else if (box[i][1].isVisible) {
+			      //ghost
+	    		  
+	    		  double t = time-runTime[i];
+	    		  //System.out.println("ghost!");
+	    		  double dist = (ghostTime-t)/ghostTime*startDist;
+	    		  double[] ghostFocus = new double [3];	// center of the ghost's motion
+	    		  Vec.set(ghostFocus, Math.cos(enemyAngle[i])*dist,
+	    				  0, Math.sin(enemyAngle[i])*dist);
+	    		  double swayScale = dist/6.0*Math.sin(t*2.);
+	    		  double[] ghostTrans = new double[3];	// side-to-side motion is along this vector
+	    		  Vec.set(ghostTrans, Math.cos(enemyAngle[i]+Math.PI/2.)*swayScale, 0,
+	    				  Math.sin(enemyAngle[i]+Math.PI/2.)*swayScale);
+//
+	    		  dx[i] = ghostFocus[0]+ghostTrans[0];
+	    		  dz[i] = ghostFocus[2]+ghostTrans[2];
+
+	    		  m = box[i][1].getMatrix();
+	    		  m.identity();
+	    		  m.translate(dx[i], 0, dz[i]);
+	    		  m.rotateX(Math.PI/2);
+	    		  m.scale(1.2,1.1,1.5);
+	    		  m.scale(0.5);
+				  		  	
+				  	m = eye_r[i].getMatrix();
+				  	m.identity();
+				  	m.translate(0.35,0.8,-0.35);
+				  	m.scale(0.25,0.25,0.25);
+				  	
+				  	m = eye_l[i].getMatrix();
+				  	m.identity();
+				  	m.translate(-0.35,0.8,-0.35);
+				  	m.scale(0.25,0.25,0.25);
+				  	
+				  	m = shoulder_r[i].getMatrix();
+				  	m.identity();
+				  	m.translate(0.8, 0, -0.25);
+				  	
+				  	m = shoulder_l[i].getMatrix();
+				  	m.identity();
+				  	m.translate(-0.8, 0, -0.25);
+				  		  	
+				  	m = hand_r[i].getMatrix();
+				  	m.identity();
+				  	m.translate(0.4, 0.1, 0);
+			      	m.rotateY(Math.PI*8/12);
+			      	m.scale(0.3,0.25,0.60);
+			      	
+			    	m = hand_l[i].getMatrix();
+				  	m.identity();
+				  	m.translate(-0.4, 0.1, 0);
+			      	m.rotateY(-Math.PI*8/12);
+			      	m.scale(0.3,0.25,0.60);
+	    	  }
 	      }
+	      
+	      for (int i=0;i<enemyNumber;i++){
+	    	  if (dz[i] > -5){ // if one cross the bar
+	    		  if (isShoot[i] == false && isMiss[i] == false && box[i][0].isVisible == true && endGame == 0){
+	    			  miss++;
+	    			  totalBullet = totalBullet-5;
+	    			  isMiss[i] = true;
+	    		  }
+	    		  for (int j=0;j<pumpkinNumber;j++){
+		    		  pumpkin[i*pumpkinNumber+j].setVisible(false);
+		    		  spring[i*springNumber+j].setVisible(false);
+		    	  }
+		    	  stalk[i].setVisible(false);
+		    	  box[i][0].setVisible(false);
+		    	  box[i][1].setVisible(false);
+		    	  isShoot[i] = false;
+		    	  if (Math.random()<.08){ //they have 8% chance every frame to go back to the origin and appear again
+		    		  respawn(i, .7);
+		    	  }
+	    	  }
+	      }
+
 	      for (int i=0;i<enemyNumber;i++){
 		      m = spring[i*springNumber].getMatrix(); //the first torus of the spring
 		      m.identity();
@@ -749,18 +786,8 @@ public class game_new extends RenderApplet{
 	                              (box[i][0].getMatrix().get(2, 3))*box[i][0].vertices[0][3])/tempDouble)*0.8 + 150)*1.0)-60-20, 5, 5);
 	                  } if(box[i][1].isVisible == true){
 	                      g.setColor(Color.blue);
-	                      double tempDouble = (box[i][0].getMatrix().get(3, 0))*box[i][0].vertices[0][0] + 
-	                      (box[i][0].getMatrix().get(3, 1))*box[i][0].vertices[0][1] +
-	                      (box[i][0].getMatrix().get(3, 2))*box[i][0].vertices[0][2] +
-	                      (box[i][0].getMatrix().get(3, 3))*box[i][0].vertices[0][3];
 	                      
-	                      g.fillOval((int)(((((box[i][0].getMatrix().get(0, 0))*box[i][0].vertices[0][0] + 
-	                              (box[i][0].getMatrix().get(0, 1))*box[i][0].vertices[0][1] +
-	                              (box[i][0].getMatrix().get(0, 2))*box[i][0].vertices[0][2] +
-	                              (box[i][0].getMatrix().get(0, 3))*box[i][0].vertices[0][3])/tempDouble)*2.3 + 150)*1.0)+400+180, (int)(((((box[i][0].getMatrix().get(2, 0))*box[i][0].vertices[0][0] + 
-	                              (box[i][0].getMatrix().get(2, 1))*box[i][0].vertices[0][1] +
-	                              (box[i][0].getMatrix().get(2, 2))*box[i][0].vertices[0][2] +
-	                              (box[i][0].getMatrix().get(2, 3))*box[i][0].vertices[0][3])/tempDouble)*0.8 + 150)*1.0)-60-20, 5, 5);
+	                      g.fillOval((int)(dx[i]*2.3+150+400+180),(int)(dz[i]*0.8+150-60-20),5,5);
 	                  }
 	                  
 	                  
@@ -873,7 +900,8 @@ public class game_new extends RenderApplet{
 	  void respawn(int i, double pumpkinProbability) {
 		  runTime[i] = time;
 		  dx[i] = (i-enemyNumber/2)*8/(1+(time-runTime[i])/4);
-	 	  dz[i] = -50+5*(time-runTime[i]);
+	 	  dz[i] = -startDist+5*(time-runTime[i]);
+	 	  enemyAngle[i] = Math.atan2(dz[i], dx[i]);
 		  for (int j=0;j<pumpkinNumber;j++){
 	 		  pumpkin[i*pumpkinNumber+j].setVisible(true);
 	 		  spring[i*springNumber+j].setVisible(true);
@@ -882,10 +910,13 @@ public class game_new extends RenderApplet{
 	 	  if(Math.random()<pumpkinProbability){
 	 		  box[i][0].setVisible(true);
 	 		  box[i][1].setVisible(false);
-//	 		  System.out.println("pumpkin");
+	 		  System.out.println("pumpkin");
+	 		  enemySpeed[i] = 50/4;
 	 	  }else{
 	 		  box[i][0].setVisible(false);
 		    	  box[i][1].setVisible(true);
+		 		  System.out.println("ghost");
+		      enemySpeed[i] = 50/4;
 	 	  }
 	 	 isShoot[i] = false;
 	 	 isMiss[i] = false;
