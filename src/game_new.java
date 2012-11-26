@@ -880,9 +880,7 @@ public class game_new extends RenderApplet{
 		      gunRing1Color.setAmbient((time-c)*2, (time-c)*2, 0);
 		      gunRing2Color.setAmbient(0, (time-c)*2, 0);
 		      gunRing3Color.setAmbient(0, (time-c)*2, (time-c)*2);
-//		      barrelColor.setAmbient(0, (double)gunEnergy/100, 0);
-//		      gunColor.setAmbient(1,10,(double)gunEnergy/100);
-//		      gunColor.setAmbient(gunEnergy/130,gunEnergy/130,gunEnergy/130);
+
 		    //set laser
 		      m = laser.getMatrix();
 		      m.identity();
