@@ -9,7 +9,11 @@ import java.awt.Graphics;
 import java.awt.image.MemoryImageSource;
 import java.io.IOException;
 import java.applet.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import render.*;
+import com.jcraft.jorbis.JOrbisBGM;
+
 public class game_new extends RenderApplet{
 	Material boxColor, pumpkinColor1, springColor, stalkColor,lineColor,wallColor,groundColor;
 	Material gunColor,barrelColor,gunheadColor,gunRing1Color,gunRing2Color,gunRing3Color,laserColor,gunWingColor;
@@ -76,7 +80,9 @@ public class game_new extends RenderApplet{
 	Texture texture;
 	int H, W;
 	int mouseX, mouseY;
-	AudioClip gunShot,blowup;
+	AudioClip gunShot = null;
+	AudioClip blowup = null;
+	JOrbisBGM bgm = null;
 	
 	
 	public boolean keyDown(Event evt, int key){
@@ -227,9 +233,17 @@ public class game_new extends RenderApplet{
 		   Cursor transparentCursor = java.awt.Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisiblecursor"); //invisiblecursor 
 		   setCursor(transparentCursor);   
 		   
-		   
-		   gunShot = getAudioClip(getCodeBase(), "LASER.wav");
-		   blowup = getAudioClip(getCodeBase(), "pop8.wav");
+		   if (gunShot == null) {
+			   gunShot = getAudioClip(getCodeBase(), "sounds/LASER.wav");
+		   }
+		   if (blowup == null) {
+			   blowup = getAudioClip(getCodeBase(), "sounds/pop8.wav");
+		   }
+		   if (bgm == null) {
+			   bgm = new JOrbisBGM();
+			   bgm.set_URL(getClass().getResource("sounds/SD2D_22.ogg"));
+			   new Thread(bgm).start();
+		   }
 		   for (int i=0;i<enemyNumber;i++)
 			   Y[i] = Math.random();
 		   H = getHeight();
