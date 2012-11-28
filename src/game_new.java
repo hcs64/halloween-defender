@@ -74,7 +74,7 @@ public class game_new extends RenderApplet{
 	double runTime[] = new double[enemyNumber];
 	
 	static final double explodeTime = .25;	// how long a pumpkin takes to explode
-	static final double ghostTime = 10.;		// how long a ghost takes to approach
+	static final double ghostTime = 10.;// how long a ghost takes to approach
 	static final double pumpkinTime = 10.;	// how long a pumpkin takes to approach
 	static final double startDist = 50.;		// distance from which enemies appear
 	Texture texture;
@@ -543,7 +543,7 @@ public class game_new extends RenderApplet{
 //		    	time = 0;
 			   initialize();
 			   for (int i=0;i<enemyNumber;i++){
-				   box[i][0].setVisible(false);
+				   box[i][0].setVisible(true);
 				   box[i][1].setVisible(false);
 				   }
 		   }
@@ -677,9 +677,12 @@ public class game_new extends RenderApplet{
 	      
 	      for (int i=0;i<enemyNumber;i++){
 	    	  if (dx[i]*dx[i]+dz[i]*dz[i]<(5*5)){ // if one cross the bar
-	    		  if (isShoot[i] == false && isMiss[i] == false && box[i][0].isVisible == true && endGame == 0){
+	    		  if (isShoot[i] == false && isMiss[i] == false && endGame == 0){
 	    			  miss++;
-	    			  totalBullet = totalBullet-5;
+	    			  if (box[i][0].isVisible == true )
+	    				  totalBullet = totalBullet-5;
+	    			  else if (box[i][1].isVisible == true )
+	    				  totalBullet = totalBullet-10;
 	    			  isMiss[i] = true;
 	    		  }
 	    		  enemySpeed[i] = 0;
