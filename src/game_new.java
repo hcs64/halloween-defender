@@ -79,6 +79,9 @@ public class game_new extends RenderApplet{
 	static final double ghostTime = 20.;// how long a ghost takes to approach
 	static final double pumpkinTime = 20.;	// how long a pumpkin takes to approach
 	static final double startDist = 50.;		// distance from which enemies appear
+	static final double ouchTime = .25;
+	double ouchTimer = 0;
+	double ouchScale = 0;
 	Texture texture;
 	int H, W;
 	int mouseX, mouseY;
@@ -218,6 +221,7 @@ public class game_new extends RenderApplet{
 			clickTime = new double[enemyNumber];
 			isShoot = new boolean[enemyNumber];
 			runTime = new double[enemyNumber];
+			ouchTimer = 0;
 		   
 			Y= new double[enemyNumber];
 			swingX = 0;
@@ -410,7 +414,9 @@ public class game_new extends RenderApplet{
 	          hand_r[i].setMaterial(bodyColor);
 	          
 	          hand_l[i] = shoulder_l[i].add().sphere(16);
-	          hand_l[i].setMaterial(bodyColor);	    
+	          hand_l[i].setMaterial(bodyColor);
+	          
+	          previousTime = time;
 	      	
 	      }
 	      	//add first torus to box
@@ -505,6 +511,9 @@ public class game_new extends RenderApplet{
 			   gunEnergy = Math.min(gunEnergy+1, 100);
 			   reloadCount = 0;
 		   }
+		   
+		   double deltaT = time - previousTime;
+		   
 		   reloadCount = reloadCount + time - previousTime;
 		   previousTime = time;
 		   
@@ -590,6 +599,30 @@ public class game_new extends RenderApplet{
 	    m.identity();
 	    m.translate(0, -3.5, 0);
 	    m.scale(100,.2,100);
+	    
+	    if (ouchTimer > 0 || ouchScale > 0)
+	    {
+	    	if (ouchTimer > 0) {
+	    		ouchScale = 1;
+	    		ouchTimer -= deltaT;
+	    	}
+	    	if (ouchScale < .001)
+	    	{
+	    		ouchScale = 0;
+	    	}
+	    	
+	    	lineColor.setAmbient(0.5*ouchScale, 0.0, 0.5*(1.-ouchScale));
+		    lineColor.setDiffuse(0.8*ouchScale, 0.0, 0.8*(1.-ouchScale));
+		    lineColor.setSpecular(.2, .5, 0, 20);
+	    	ouchScale /= 1.1;
+	    }
+	    else
+	    {
+	    	lineColor.setAmbient(0.0, 0.0, 0.5);
+		    lineColor.setDiffuse(0.0, 0.0, 0.8);
+		    lineColor.setSpecular(.2, .5, 0, 20);
+	    }
+	    
 	      for (int i=0;i<box.length;i++){ // here is how the enemies move
 //	    	  m.scale(2);
 	    	  
@@ -692,9 +725,15 @@ public class game_new extends RenderApplet{
 	    		  if (isShoot[i] == false && isMiss[i] == false && endGame == 0){
 	    			  miss++;
 	    			  if (box[i][0].isVisible == true )
+	    			  {
 	    				  totalBullet = totalBullet-5;
+		    			  ouchTimer = ouchTime;
+	    			  }
 	    			  else if (box[i][1].isVisible == true )
+	    			  {
 	    				  totalBullet = totalBullet-10;
+		    			  ouchTimer = ouchTime;
+	    			  }
 	    			  isMiss[i] = true;
 	    		  }
 	    		  enemySpeed[i] = 0;
