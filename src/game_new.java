@@ -1009,11 +1009,11 @@ public class game_new extends RenderApplet{
 	 		 // move offscreen so it doesn't show up yet this frame
 	 		 Matrix m = box[i][0].getMatrix();
 	 		 m.identity();
-	 		 m.translate(0,-1000,0);
+	 		 m.translate(-1000,-1000,-1000);
 	 		 
 	 		 m = box[i][1].getMatrix();
 	 		 m.identity();
-	 		 m.translate(0,-1000,0);
+	 		 m.translate(-1000,-1000,-1000);
 	 	 }
  	  }
 
