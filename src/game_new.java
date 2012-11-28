@@ -21,7 +21,7 @@ public class game_new extends RenderApplet{
 	Material shirtColor, skinColor, bodyColor, eyeColor;
 	
 	Font bigFont = new Font("Helvetica", Font.BOLD, 23);
-	int enemyNumber = 3;
+	int enemyNumber = 2;
 	int springNumber = 10;
 	int pumpkinNumber = 4;
 	int pumpkinSections = 4;
@@ -72,11 +72,12 @@ public class game_new extends RenderApplet{
 	boolean isShoot[] = new boolean[enemyNumber];
 	double swingTime;
 	double runTime[] = new double[enemyNumber];
+	double turnStartTime = 0;
 	
 	static final double explodeTime = .25;	// how long a pumpkin takes to explode
 	static final double blinkTime = .15;		// how long a ghost takes to blink out
-	static final double ghostTime = 10.;// how long a ghost takes to approach
-	static final double pumpkinTime = 10.;	// how long a pumpkin takes to approach
+	static final double ghostTime = 20.;// how long a ghost takes to approach
+	static final double pumpkinTime = 20.;	// how long a pumpkin takes to approach
 	static final double startDist = 50.;		// distance from which enemies appear
 	Texture texture;
 	int H, W;
@@ -90,10 +91,12 @@ public class game_new extends RenderApplet{
 		if (key == 'A' || key == 'a'){
 			leftKey = 1;
 			turn = -1;
+			turnStartTime = time;
 		}
 		else if (key == 'D' || key == 'd'){
 			rightKey = 1;
 			turn = 1;
+			turnStartTime = time;
 		}
 			
 		return true;
@@ -505,7 +508,12 @@ public class game_new extends RenderApplet{
 		   reloadCount = reloadCount + time - previousTime;
 		   previousTime = time;
 		   
-		   turningAngle += turn * Math.PI/10;
+		   if (turn != 0)
+		   {
+			   turningAngle += turn * Math.PI/2. * (time-turnStartTime);
+			   turnStartTime = time;
+		   }
+		   
 		   if(score >= levelScore){
 			   	  
 				  getWorld().child = null;
@@ -613,7 +621,7 @@ public class game_new extends RenderApplet{
 		    		  m.translate(dx[i], -3+3*Math.abs(Math.sin(t)), dz[i]);
 		    	  }
 		    	  m.scale(.5);
-		    	  m.rotateY(Math.PI/2.+enemyAngle[i]);
+		    	  m.rotateY(Math.PI/2-enemyAngle[i]);
 	    	  }
 	    	  
 	    	  else if (box[i][1].isVisible) {
@@ -980,7 +988,9 @@ public class game_new extends RenderApplet{
 		  runTime[i] = time;
 		  //dx[i] = (i-enemyNumber/2)*8/(1+(time-runTime[i])/4);
 	 	  //dz[i] = -startDist+5*(time-runTime[i]);
-	 	  enemyAngle[i] = i*2.*Math.PI/enemyNumber; //Math.atan2(dz[i], dx[i]);
+		  double enemyArc = (2. - ( 1.5*3./(enemyNumber-1) ))*Math.PI;
+		  enemyAngle[i] = i*enemyArc/(enemyNumber-1) - (enemyArc+Math.PI)/2.;
+		  
 	 	  dx[i] = Math.cos(enemyAngle[i])*startDist;
 	 	  dz[i] = Math.sin(enemyAngle[i])*startDist;
 		  for (int j=0;j<pumpkinNumber;j++){
