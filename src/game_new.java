@@ -748,52 +748,86 @@ public class game_new extends RenderApplet{
 		      m.scale(2.5);
 		      
 	      }
-	      //what if the pumpkin get shot
+
 	      for (int i=0;i<enemyNumber;i++){
-		      if (time-clickTime[i]<explodeTime && isShoot[i] == true){ //explode!
-		    	  double s = 1+(time - clickTime[i])/explodeTime*3;
-		    	  
-		    	  blowup.play();
-		    	  for (int j=0;j<pumpkinNumber;j++){
-		    		  Geometry pg = pumpkin[i*pumpkinNumber+j];
-		    		  
-		    		  for (int c=0; c < pg.nChildren(); c++) {
-		    			  Matrix cm = pg.child(c).getMatrix();
-		    			  double[] pv = pumpkin_vecs[c];
-		    			  
-		    			  cm.identity();
-		    			  // expand outward
-		    			  cm.translate((s-1)*pv[0], (s-1)*pv[1] , (s-1)*pv[2]);
+
+	    	  //what if the pumpkin get shot
+	    	  if (box[i][0].isVisible) {
+	    		  if (time-clickTime[i]<explodeTime && isShoot[i] == true){ //explode!
+	    			  double s = 1+(time - clickTime[i])/explodeTime*3;
+
+	    			  if (stalk[i].isVisible) {
+	    				  // using the visibility of the stalk as a kludge to avoid
+	    				  // playing twice
+	    				  blowup.play();
+	    				  stalk[i].setVisible(false);
+	    			  }
+
+	    			  for (int j=0;j<pumpkinNumber;j++){
+	    				  Geometry pg = pumpkin[i*pumpkinNumber+j];
+
+	    				  for (int c=0; c < pg.nChildren(); c++) {
+	    					  Matrix cm = pg.child(c).getMatrix();
+	    					  double[] pv = pumpkin_vecs[c];
+
+	    					  cm.identity();
+	    					  // expand outward
+	    					  cm.translate((s-1)*pv[0], (s-1)*pv[1] , (s-1)*pv[2]);
+	    				  }
+	    			  }
+
+	    			  // fade out this pumpkin's bits
+	    			  pumpkinFadeColor[i].setTransparency((time - clickTime[i])/explodeTime);
+
+
+	    		  }
+	    		  if (time-clickTime[i]>=explodeTime && isShoot[i] == true){ //then disappear
+	    			  for (int j=0;j<pumpkinNumber;j++){
+	    				  pumpkin[i*pumpkinNumber+j].setVisible(false);
+	    				  spring[i*springNumber+j].setVisible(false);
+	    			  }
+	    			  stalk[i].setVisible(false);
+	    			  box[i][0].setVisible(false);
+	    			  box[i][1].setVisible(false);
+	    			  isShoot[i] = false;
+	    			  if (Math.random()<.5){ //they have 50% chance to go back to the origin and appear again; or they have to wait until they cross the bar
+	    				  System.out.println("instant respawn "+i);
+	    				  respawn(i, .7);
+	    			  }
+	    			  else
+	    			  {
+	    				  System.out.println("defer respawn "+i);
+	    				  dx[i]=0;
+	    				  dz[i]=0;
+	    			  }
+	    		  }
+	    	  }
+		      //what if the ghost gets shot
+		      else if (box[i][1].isVisible)
+		      {
+		    	  if (time>=clickTime[i] && isShoot[i] == true){ //then disappear
+		    		  System.out.println("ghost shot");
+	
+		    		  for (int j=0;j<pumpkinNumber;j++){
+		    			  pumpkin[i*pumpkinNumber+j].setVisible(false);
+		    			  spring[i*springNumber+j].setVisible(false);
+		    		  }
+		    		  stalk[i].setVisible(false);
+		    		  box[i][1].setVisible(false);
+		    		  isShoot[i] = false;
+		    		  if (Math.random()<.5){ //they have 50% chance to go back to the origin and appear again; or they have to wait until they cross the bar
+		    			  System.out.println("instant respawn "+i);
+		    			  respawn(i, .7);
+		    		  }
+		    		  else
+		    		  {
+		    			  System.out.println("defer respawn "+i);
+		    			  dx[i]=0;
+		    			  dz[i]=0;
 		    		  }
 		    	  }
-		    	  
-		    	  // fade out this pumpkin's bits
-		    	  pumpkinFadeColor[i].setTransparency((time - clickTime[i])/explodeTime);
-		    	  
-		    	  stalk[i].setVisible(false);		    	  
 		      }
-		      if (time-clickTime[i]>=explodeTime && isShoot[i] == true){ //then disappear
-		    	  for (int j=0;j<pumpkinNumber;j++){
-		    		  pumpkin[i*pumpkinNumber+j].setVisible(false);
-		    		  spring[i*springNumber+j].setVisible(false);
-		    	  }
-		    	  stalk[i].setVisible(false);
-		    	  box[i][0].setVisible(false);
-		    	  box[i][1].setVisible(false);
-		    	  isShoot[i] = false;
-		    	  if (Math.random()<.5){ //they have 50% chance to go back to the origin and appear again; or they have to wait until they cross the bar
-		    		  System.out.println("instant respawn "+i);
-		    		  respawn(i, .7);
-		    	  }
-		    	  else
-		    	  {
-		    		  System.out.println("defer respawn "+i);
-		    		  dx[i]=0;
-		    		  dz[i]=0;
-		    	  }
-		      }
-	      }
-
+		   }
 	   }
 	   Color C = new Color(255,255,255,100); 
 
