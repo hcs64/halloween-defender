@@ -74,6 +74,7 @@ public class game_new extends RenderApplet{
 	double runTime[] = new double[enemyNumber];
 	
 	static final double explodeTime = .25;	// how long a pumpkin takes to explode
+	static final double blinkTime = .15;		// how long a ghost takes to blink out
 	static final double ghostTime = 10.;// how long a ghost takes to approach
 	static final double pumpkinTime = 10.;	// how long a pumpkin takes to approach
 	static final double startDist = 50.;		// distance from which enemies appear
@@ -642,6 +643,9 @@ public class game_new extends RenderApplet{
 	    		  m.rotateZ(Math.PI/2.+enemyAngle[i]);
 	    		  m.scale(1.2,1.1,1.5);
 	    		  m.scale(0.5);
+	    		  
+	    		    m = torso[i].getMatrix();
+	    		    m.identity();
 				  		  	
 				  	m = eye_r[i].getMatrix();
 				  	m.identity();
@@ -781,7 +785,7 @@ public class game_new extends RenderApplet{
 
 
 	    		  }
-	    		  if (time-clickTime[i]>=explodeTime && isShoot[i] == true){ //then disappear
+	    		  else if (time-clickTime[i]>=explodeTime && isShoot[i] == true){ //then disappear
 	    			  for (int j=0;j<pumpkinNumber;j++){
 	    				  pumpkin[i*pumpkinNumber+j].setVisible(false);
 	    				  spring[i*springNumber+j].setVisible(false);
@@ -802,18 +806,21 @@ public class game_new extends RenderApplet{
 	    			  }
 	    		  }
 	    	  }
-		      //what if the ghost gets shot
+		      //what if a ghost gets shot
 		      else if (box[i][1].isVisible)
 		      {
-		    	  if (time>=clickTime[i] && isShoot[i] == true){ //then disappear
-		    		  System.out.println("ghost shot");
-	
-		    		  for (int j=0;j<pumpkinNumber;j++){
-		    			  pumpkin[i*pumpkinNumber+j].setVisible(false);
-		    			  spring[i*springNumber+j].setVisible(false);
-		    		  }
-		    		  stalk[i].setVisible(false);
+	    		  if (time-clickTime[i]<blinkTime && isShoot[i] == true){ // blink!
+	    			  double s = 1+(time - clickTime[i])/blinkTime*5;
+
+
+	    			  m = torso[i].getMatrix();
+	    			  m.scale(1./s, 1./s, s);
+	    		  }
+	    		  else if (time-clickTime[i]>=blinkTime && isShoot[i] == true){ // disappear
 		    		  box[i][1].setVisible(false);
+		    		  
+		    		  blowup.play();
+	    			  
 		    		  isShoot[i] = false;
 		    		  if (Math.random()<.5){ //they have 50% chance to go back to the origin and appear again; or they have to wait until they cross the bar
 		    			  System.out.println("instant respawn "+i);
