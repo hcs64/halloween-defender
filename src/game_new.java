@@ -15,13 +15,10 @@ import render.*;
 import com.jcraft.jorbis.JOrbisBGM;
 
 public class game_new extends RenderApplet{
-	Material boxColor, pumpkinColor1, springColor, stalkColor,lineColor,wallColor,groundColor;
-	Material gunColor,barrelColor,gunheadColor,gunRing1Color,gunRing2Color,gunRing3Color,laserColor,gunWingColor;
-	// ghost
-	Material shirtColor, skinColor, bodyColor, eyeColor;
 	
 	Font bigFont = new Font("Helvetica", Font.BOLD, 23);
-	int enemyNumber = 2;
+	Font Font1 = new Font("Broadway", Font.BOLD, 26);
+	int enemyNumber = 3;
 	int springNumber = 10;
 	int pumpkinNumber = 4;
 	int pumpkinSections = 4;
@@ -29,26 +26,44 @@ public class game_new extends RenderApplet{
 	int levelScore = 10;
 	int miss = 0;
 	int bullet = 0;
-	int totalBullet = 100;
+	int totalLife = 100;
 	int level = 1;
-	int endGame = 0;
+	int gameState = 2; // 0:game playing 1:game over 2:game initialized
 	int reStart = 0;
-	int addLightCount = 0;
 	int turn = 0, leftKey = 0, rightKey = 0;
-	double turningAngle = 0;
 	int gunEnergy = 100;
-	int shootEnergy = 8;
+	int shootEnergy = 8; //energy consumed per shot
+	int H, W; //window size
+	int mouseX, mouseY; //mouse position
+	
 	double reloadCount = 0;
 	double previousTime = 0;
-	static final double chargeRate = .15;
+	double turningAngle = 0;
+	double time = 0;
+	double shootTime = 0;
+	double clickTime[] = new double[enemyNumber];
+	double swingTime;
+	double runTime[] = new double[enemyNumber];
+	double turnStartTime = 0;
+	double ouchTimer = 0;
+	double ouchScale = 0;
+	double point[] = new double[3];
+	double pumpkin_vecs[][] = new double[pumpkinSections*pumpkinSections][5]; // x, y, z, u, v
+	double warningTimer = 0;
+	
+	boolean isCapturedClick = true;
+	boolean isShoot[] = new boolean[enemyNumber];
+	boolean showWarning = false;
+	
+	Material boxColor, pumpkinColor1, springColor, stalkColor,lineColor,wallColor,groundColor;
+	Material gunColor,barrelColor,gunheadColor,gunRing1Color,gunRing2Color,gunRing3Color,laserColor,gunWingColor;
+	Material pumpkinFadeColor[] = new Material[enemyNumber];
+	Material shirtColor, skinColor, bodyColor, eyeColor;	// ghost
+	
 	Geometry box[][] = new Geometry[enemyNumber][2];
 	Geometry stalk[] = new Geometry[enemyNumber];
 	Geometry spring[] = new Geometry[springNumber*enemyNumber];
 	Geometry pumpkin[] = new Geometry[pumpkinNumber*enemyNumber];
-	Material pumpkinFadeColor[] = new Material[enemyNumber];
-	
-	double pumpkin_vecs[][] = new double[pumpkinSections*pumpkinSections][5]; // x, y, z, u, v
-	
 	Geometry line,wall,ground;
 	Geometry gun,gunBody,gunHead,barrel,gunRing1,gunRing2,gunRing3,laser,gunWing;
 	//ghost
@@ -61,18 +76,9 @@ public class game_new extends RenderApplet{
 	Geometry hand_r[] = new Geometry[enemyNumber];
 	Geometry hand_l[] = new Geometry[enemyNumber];
 	
-	
-	boolean isCapturedClick = true;
-	double point[] = new double[3];
-	Matrix m;
 	Geometry g = new Geometry();
-	double time = 0;
-	double shootTime = 0;
-	double clickTime[] = new double[enemyNumber];
-	boolean isShoot[] = new boolean[enemyNumber];
-	double swingTime;
-	double runTime[] = new double[enemyNumber];
-	double turnStartTime = 0;
+
+	Matrix m;
 	
 	static final double explodeTime = .25;	// how long a pumpkin takes to explode
 	static final double blinkTime = .15;		// how long a ghost takes to blink out
@@ -80,15 +86,15 @@ public class game_new extends RenderApplet{
 	static final double pumpkinTime = 20.;	// how long a pumpkin takes to approach
 	static final double startDist = 50.;		// distance from which enemies appear
 	static final double ouchTime = .25;
-	double ouchTimer = 0;
-	double ouchScale = 0;
+	static final double chargeRate = .15; // energy charges rate
+	static final double warningTime = .25;
+	
 	Texture texture;
-	int H, W;
-	int mouseX, mouseY;
+	
 	AudioClip gunShot = null;
 	AudioClip blowup = null;
 	JOrbisBGM bgm = null;
-	
+	Image bg1,bg2;
 	
 	public boolean keyDown(Event evt, int key){
 		if (key == 'A' || key == 'a'){
@@ -126,17 +132,16 @@ public class game_new extends RenderApplet{
 	
 	public boolean mouseDown(Event e, int x, int y) {
 		isCapturedClick = true;
-		if (endGame == 0){
+		if (gameState == 0){
 			if (gunEnergy >= shootEnergy){
 				gunEnergy -= shootEnergy;
 				bullet++;
-		//		totalBullet--;
+		//		totalLife--;
 				g = queryCursor(point);
 				
 				shootTime = time;
 		//		gunTheta = -1*Math.atan2(point[0],-point[2]);
-		//	    gunPhi = 1*Math.atan2(point[1], Math.sqrt(Math.pow((point[0]),2)+Math.pow(-point[2], 2)));
-		//		
+		//	    gunPhi = 1*Math.atan2(point[1], Math.sqrt(Math.pow((point[0]),2)+Math.pow(-point[2], 2)));	
 				gunShot.play();
 				if (g == null)
 					return true;
@@ -145,7 +150,7 @@ public class game_new extends RenderApplet{
 						isShoot[i] = true;
 						clickTime[i] = time;
 						score=score+2;
-		//				totalBullet = totalBullet + 10;
+		//				totalLife = totalLife + 10;
 		//				System.out.print("stalk shot");
 					}
 				}
@@ -163,41 +168,156 @@ public class game_new extends RenderApplet{
 		return true;
 	}
 	
-		public boolean mouseMove(Event e, int x, int y){
-			
-			mouseX = x;
-			mouseY = y;
-			return false;
+	public boolean mouseMove(Event e, int x, int y){
+		mouseX = x;
+		mouseY = y;
+		return false;
+	}
+		
+	public boolean mouseDrag(Event e, int x, int y) {   
+		mouseX = x;
+		mouseY = y;
+		return false;
+	}
+
+	public boolean mouseUp(Event e, int x, int y) {
+		if (isCapturedClick) {
+			isCapturedClick = false;
+		}
+		if (gameState != 0 && x< 450 && x > 350 && y < 525 && y > 475){
+			reStart = 1;
+		}
+		return false;
+	}
+	   
+	public void initialize() {
+		    
+		//hide cursor
+		int[] pixels = new int[16 * 16];  
+		Image image = java.awt.Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));   
+		Cursor transparentCursor = java.awt.Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisiblecursor"); //invisiblecursor 
+		setCursor(transparentCursor);   
+		   
+		if (gunShot == null) {
+			gunShot = getAudioClip(getCodeBase(), "sounds/LASER.wav");
+		}
+		if (blowup == null) {
+			blowup = getAudioClip(getCodeBase(), "sounds/pop8.wav");
+		}
+		if (bgm == null) {
+			bgm = new JOrbisBGM();
+			bgm.set_URL(getClass().getResource("sounds/SD2D_22.ogg"));
+			new Thread(bgm).start();
+		}
+		bg1 = Toolkit.getDefaultToolkit().getImage("images/bg1.jpg");
+		bg2 = Toolkit.getDefaultToolkit().getImage("images/bg2.jpg");
+		   
+		getRenderer().setH(600);
+		getRenderer().setW(800);
+		H = getRenderer().getH();
+		W = getRenderer().getW();
+
+		setBgColor(0, .5, 0);
+
+		addLight( 1, 1, 1, .8, .85, 1);
+		addLight(-1,-1,-1, 1, 1, 1);
+		addLight(-1, 1, 1, .8, .85, 1);
+		addLight(-1, 1,-1, .5, .5, .5);
+		gunColor = new Material();
+		gunColor.setAmbient(1, 1, 1);
+		gunColor.setDiffuse(.2, .2, .2);
+		gunColor.setSpecular(.5, .5, .5, 20);
+		barrelColor = new Material();
+		barrelColor.setAmbient(0, 1, 0);
+		barrelColor.setDiffuse(0, 1, 0);
+		barrelColor.setSpecular(.8, .5, 0, 20);
+		gunheadColor = new Material();
+		gunheadColor.setAmbient(.1, .1, .1);
+		gunheadColor.setDiffuse(.2, .2, .2);
+		gunheadColor.setSpecular(.2, .2, .2, 20);
+		gunRing1Color = new Material();
+		gunRing1Color.setAmbient(.5, .1, .5);
+		gunRing1Color.setDiffuse(.2, .2, .2);
+		gunRing1Color.setSpecular(.2, .2, .2, 20);
+		gunRing2Color = new Material();
+		gunRing2Color.setAmbient(.5, .1, .5);
+		gunRing2Color.setDiffuse(.2, .2, .2);
+		gunRing2Color.setSpecular(.2, .2, .2, 20);
+		gunRing3Color = new Material();
+		gunRing3Color.setAmbient(.5, .1, .5);
+		gunRing3Color.setDiffuse(.2, .2, .2);
+		gunRing3Color.setSpecular(.2, .2, .2, 20);
+		laserColor = new Material();
+		laserColor.setAmbient(0, .4, 0);
+		laserColor.setDiffuse(0, .2, 0);
+		laserColor.setSpecular(0, 1, 0, 1);
+		gunWingColor = new Material();
+		gunWingColor.setAmbient(.7, .7, .7);
+		gunWingColor.setDiffuse(.1, .1, .1);
+		gunWingColor.setSpecular(.1, .1, .1, 20);
+	      
+	      //ghost
+	      // Body Color
+		bodyColor = new Material();
+		bodyColor.setAmbient(0.4, 0.4,0.4);
+		bodyColor.setDiffuse(0.8, 0.8, 0.75);
+		bodyColor.setSpecular(0,0,0,1);
+   
+		// Eye Color
+		eyeColor = new Material();
+		eyeColor.setAmbient(0, 0, 0);
+		eyeColor.setDiffuse(0, 0, 0);
+		eyeColor.setSpecular(1,1,1,10);
+	      
+	      
+		wallColor = new Material();
+		wallColor.setAmbient(0, 0, 0);
+		wallColor.setDiffuse(0, 0, 0);
+		wallColor.setSpecular(.2, .2, .2, 20);
+	      
+		groundColor = new Material();
+		groundColor.setAmbient(.5, .1, .5);
+		groundColor.setDiffuse(.2, .2, .2);
+		groundColor.setSpecular(.2, .2, .2, 20);
+	      
+		lineColor = new Material();
+		lineColor.setAmbient(0.0, 0.0, 0.5);
+		lineColor.setDiffuse(0.0, 0.0, 0.8);
+		lineColor.setSpecular(.2, .5, 0, 20);
+	      
+		boxColor = new Material();
+		boxColor.setAmbient(0.5, 0.0, 0.2);
+		boxColor.setDiffuse(0.0, 0.0, 0.8);
+		boxColor.setSpecular(.2, .5, 0, 20);
+
+		pumpkinColor1 = new Material();
+		pumpkinColor1.setAmbient(0.6, 0.2, 0);
+		pumpkinColor1.setDiffuse(.6, .3, 0);
+	      
+		for (int i = 0; i < enemyNumber; i++){
+			pumpkinFadeColor[i] = new Material();
+			pumpkinFadeColor[i].copy(pumpkinColor1);
+			pumpkinFadeColor[i].setTransparency(0.);
 		}
 		
-	   public boolean mouseDrag(Event e, int x, int y) {
+		springColor = new Material();
+		springColor.setAmbient(0.2, 0.2, 0.2);
+		springColor.setDiffuse(0.1, 0.1, 0.1);
+		springColor.setSpecular(1, 1, 1, 50);
+
+		stalkColor = new Material();
+		stalkColor.setAmbient(.0, 0.2, .0);
+		stalkColor.setDiffuse(0.0, 0, 0);
+		stalkColor.setSpecular(0, 0, 0, 1);
+
+	}
+
+	   
+	   
+	   
+	   
+	   public void newGame() {
 		   
-		   mouseX = x;
-			mouseY = y;
-//	      if (isCapturedClick)
-//	         return true;
-	      
-	      return false;
-	   }
-
-	   public boolean mouseUp(Event e, int x, int y) {
-	      if (isCapturedClick) {
-	         isCapturedClick = false;
-//	         return true;
-	      }
-	      if (endGame == 1 && x<100 && y < 50){
-
-	    	
-	    	reStart = 1;
-//	    	initialize();
-	    	
-	      }
-	      return false;
-	   }
-
-	   public void initialize() {
-		   
-		   	enemyNumber++;
 		    box = new Geometry[enemyNumber][2];
 			stalk = new Geometry[enemyNumber];
 			spring = new Geometry[springNumber*enemyNumber];
@@ -235,27 +355,8 @@ public class game_new extends RenderApplet{
 		    isMiss = new boolean[enemyNumber];
 		    c = 0;
 		    
-		   //hide cursor
-		   int[] pixels = new int[16 * 16];  
-		   Image image = java.awt.Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));   
-		   Cursor transparentCursor = java.awt.Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisiblecursor"); //invisiblecursor 
-		   setCursor(transparentCursor);   
-		   
-		   if (gunShot == null) {
-			   gunShot = getAudioClip(getCodeBase(), "sounds/LASER.wav");
-		   }
-		   if (blowup == null) {
-			   blowup = getAudioClip(getCodeBase(), "sounds/pop8.wav");
-		   }
-		   if (bgm == null) {
-			   bgm = new JOrbisBGM();
-			   bgm.set_URL(getClass().getResource("sounds/SD2D_22.ogg"));
-			   new Thread(bgm).start();
-		   }
 		   for (int i=0;i<enemyNumber;i++)
 			   Y[i] = Math.random();
-		   H = getHeight();
-		   W = getWidth();
 		   //when does the enemy start to come out
 		   for (int i=0;i<runTime.length;i++)
 			   runTime[i] = time;
@@ -265,102 +366,13 @@ public class game_new extends RenderApplet{
 		   //is miss counted or not
 		   for (int i=0;i<isMiss.length;i++)
 			   isMiss[i] = false;
-		  //set colors
-	      setBgColor(0, .5, 0);
-	      if (addLightCount == 0){
-	    	  addLightCount++;
-		      addLight( 1, 1, 1, .8, .85, 1);
-		      addLight(-1,-1,-1, 1, 1, 1);
-		      addLight(-1, 1, 1, .8, .85, 1);
-		      addLight(-1, 1,-1, .5, .5, .5);
-	      }
-	      gunColor = new Material();
-	      gunColor.setAmbient(1, 1, 1);
-	      gunColor.setDiffuse(.2, .2, .2);
-	      gunColor.setSpecular(.5, .5, .5, 20);
-	      barrelColor = new Material();
-	      barrelColor.setAmbient(0, 1, 0);
-	      barrelColor.setDiffuse(0, 1, 0);
-	      barrelColor.setSpecular(.8, .5, 0, 20);
-	      gunheadColor = new Material();
-	      gunheadColor.setAmbient(.1, .1, .1);
-	      gunheadColor.setDiffuse(.2, .2, .2);
-	      gunheadColor.setSpecular(.2, .2, .2, 20);
-	      gunRing1Color = new Material();
-	      gunRing1Color.setAmbient(.5, .1, .5);
-	      gunRing1Color.setDiffuse(.2, .2, .2);
-	      gunRing1Color.setSpecular(.2, .2, .2, 20);
-	      gunRing2Color = new Material();
-	      gunRing2Color.setAmbient(.5, .1, .5);
-	      gunRing2Color.setDiffuse(.2, .2, .2);
-	      gunRing2Color.setSpecular(.2, .2, .2, 20);
-	      gunRing3Color = new Material();
-	      gunRing3Color.setAmbient(.5, .1, .5);
-	      gunRing3Color.setDiffuse(.2, .2, .2);
-	      gunRing3Color.setSpecular(.2, .2, .2, 20);
-	      laserColor = new Material();
-	      laserColor.setAmbient(0, .4, 0);
-	      laserColor.setDiffuse(0, .2, 0);
-	      laserColor.setSpecular(0, 1, 0, 1);
-	      gunWingColor = new Material();
-	      gunWingColor.setAmbient(.7, .7, .7);
-	      gunWingColor.setDiffuse(.1, .1, .1);
-	      gunWingColor.setSpecular(.1, .1, .1, 20);
-	      
-	      //ghost
-	      // Body Color
-	      bodyColor = new Material();
-	      bodyColor.setAmbient(0.4, 0.4,0.4);
-	      bodyColor.setDiffuse(0.8, 0.8, 0.75);
-	      bodyColor.setSpecular(0,0,0,1);
-	       
-	      // Eye Color
-	      eyeColor = new Material();
-	      eyeColor.setAmbient(0, 0, 0);
-	      eyeColor.setDiffuse(0, 0, 0);
-	      eyeColor.setSpecular(1,1,1,10);
-	      
-	      
-	      wallColor = new Material();
-	      wallColor.setAmbient(0, 0, 0);
-	      wallColor.setDiffuse(0, 0, 0);
-	      wallColor.setSpecular(.2, .2, .2, 20);
-	      
-	      groundColor = new Material();
-	      groundColor.setAmbient(.5, .1, .5);
-	      groundColor.setDiffuse(.2, .2, .2);
-	      groundColor.setSpecular(.2, .2, .2, 20);
-	      
-	      lineColor = new Material();
-	      lineColor.setAmbient(0.0, 0.0, 0.5);
-	      lineColor.setDiffuse(0.0, 0.0, 0.8);
-	      lineColor.setSpecular(.2, .5, 0, 20);
-	      
-	      boxColor = new Material();
-	      boxColor.setAmbient(0.5, 0.0, 0.2);
-	      boxColor.setDiffuse(0.0, 0.0, 0.8);
-	      boxColor.setSpecular(.2, .5, 0, 20);
-
-	      pumpkinColor1 = new Material();
-	      pumpkinColor1.setAmbient(0.6, 0.2, 0);
-	      pumpkinColor1.setDiffuse(.6, .3, 0);
-	      
+	            
 	      for (int i = 0; i < enemyNumber; i++){
 	    	  pumpkinFadeColor[i] = new Material();
 	    	  pumpkinFadeColor[i].copy(pumpkinColor1);
 	    	  pumpkinFadeColor[i].setTransparency(0.);
 	      }
 		
-	      springColor = new Material();
-	      springColor.setAmbient(0.2, 0.2, 0.2);
-	      springColor.setDiffuse(0.1, 0.1, 0.1);
-	      springColor.setSpecular(1, 1, 1, 50);
-
-	      stalkColor = new Material();
-	      stalkColor.setAmbient(.0, 0.2, .0);
-	      stalkColor.setDiffuse(0.0, 0, 0);
-	      stalkColor.setSpecular(0, 0, 0, 1);
-	      
 	      //add geometries
 	      	gun = getWorld().add();
 	      	gunBody = gun.add().sphere(16);
@@ -507,463 +519,491 @@ public class game_new extends RenderApplet{
 	   public void animate(double time) {
 //		   System.out.println(turn);
 //		   gunColor.setAmbient(gunEnergy/100, 1, 1);
-		   if (reloadCount >= chargeRate){
-			   gunEnergy = Math.min(gunEnergy+1, 100);
-			   reloadCount = 0;
-		   }
 		   
-		   double deltaT = time - previousTime;
-		   
-		   reloadCount = reloadCount + time - previousTime;
-		   previousTime = time;
-		   
-		   if (turn != 0)
-		   {
-			   turningAngle += turn * Math.PI/2. * (time-turnStartTime);
-			   turnStartTime = time;
-		   }
-		   
-		   if(score >= levelScore){
-			   	  
-				  getWorld().child = null;
-				  initialize();
-				  levelScore = levelScore + 20;
-				  bullet = 0;
-//				  totalBullet = totalBullet + 20;
-				  totalBullet = 100;
-				  gunEnergy = 100;
-				  level++;
-		   }
-		   //rotate camera
-		   m = getRenderer().getCamera();
-		   m.identity();
-		   m.rotateY(turningAngle);
-		   
-		   if(totalBullet <=0 && endGame == 0){
-			   getWorld().child = null;
-			   
-//		    	this.time = 0;
-			   endGame = 1;
-//			   initialize();
-		   }
-		   if (endGame == 1 && reStart == 1){
+		   if (gameState != 0 && reStart == 1){
 			   enemyNumber = 3;
 		    	score = 0;
 		    	levelScore = 10;
 		    	miss = 0;
 		    	bullet = 0;
-		    	totalBullet = 100;
+		    	totalLife = 100;
 		    	level = 1;
 		    	turningAngle = 0;
 			   reStart = 0;
-			   endGame = 0;
-			   
-//		    	time = 0;
-			   initialize();
-			   for (int i=0;i<enemyNumber;i++){
-				   box[i][0].setVisible(true);
-				   box[i][1].setVisible(false);
-				   }
+			   gameState = 0; 
+			   newGame();
+			  for (int i=0;i<enemyNumber;i++)
+				  runTime[i]=time;
 		   }
-	      this.time = time;
-	      
-	      m = getWorld().getMatrix();
-	      m.identity();
-	      //set gun
-	      setGun(time);
-	      
-	      if(bullet==0){
-	    	 int i;
-	    	 
-	    	 //for(i=0; i<enemyNumber;i++)
-	    	//	 box[i][1].setVisible(false);
-	
-	      }
-	            
-	      for (int i=0;i<enemyNumber;i++)
-	    	  swingY[i] = Y[i]*Math.cos(3*(time - swingTime)+Y[i]); //this is how they swing their head;
-	    pop = 0.5;
-	    
-	    //setEnviornment
-	    m = line.getMatrix();
-	    m.identity();
-	    m.translate(0,-3, 0);
-	    m.rotateX(Math.PI/2);
-	    m.scale(10,10,5);
-	    m = wall.getMatrix();
-	    m.identity();
-	    m.translate(0, -3, 0);
-	    m.rotateX(Math.PI/2);
-	    m.scale(60,60,200);
-	    m = ground.getMatrix();
-	    m.identity();
-	    m.translate(0, -3.5, 0);
-	    m.scale(100,.2,100);
-	    
-	    if (ouchTimer > 0 || ouchScale > 0)
-	    {
-	    	if (ouchTimer > 0) {
-	    		ouchScale = 1;
-	    		ouchTimer -= deltaT;
-	    	}
-	    	if (ouchScale < .001)
-	    	{
-	    		ouchScale = 0;
-	    	}
-	    	
-	    	lineColor.setAmbient(0.5*ouchScale, 0.0, 0.5*(1.-ouchScale));
-		    lineColor.setDiffuse(0.8*ouchScale, 0.0, 0.8*(1.-ouchScale));
-		    lineColor.setSpecular(.2, .5, 0, 20);
-	    	ouchScale /= 1.1;
-	    }
-	    else
-	    {
-	    	lineColor.setAmbient(0.0, 0.0, 0.5);
-		    lineColor.setDiffuse(0.0, 0.0, 0.8);
-		    lineColor.setSpecular(.2, .5, 0, 20);
-	    }
-	    
-	      for (int i=0;i<box.length;i++){ // here is how the enemies move
-//	    	  m.scale(2);
-	    	  
-	    	  
-	    	  
-	    	  if (box[i][0].isVisible) {
-	    		  // pumpkin movements
-	    		  
-	    		  double t = 2*(time-runTime[i])-i;
-	    		  
-	    		  //enemyAngle[i] = (i/enemyNumber)*2.*Math.PI; //Math.atan2(dz[i], dx[i]);
-	    		  
-		    	  //dx[i] = (i-enemyNumber/2)*8/(1+(time-runTime[i])/4); // set x; they are separated by there index and will closer to each other when they moving towards you 
-		    	  //dz[i] = -startDist+2.5*(2*(time-runTime[i])-i); //moving outward
-	    		  double dist = (pumpkinTime-t)/pumpkinTime*startDist;
-	    		  if (enemySpeed[i] != 0)
-	    		  {
-	    		  dx[i] = Math.cos(enemyAngle[i])*dist;
-	    		  dz[i] = Math.sin(enemyAngle[i])*dist;
-	    		  }
-	    		  
-		    	  m = box[i][0].getMatrix();
-		    	  m.identity();
-	
-		    	  if (t < Math.PI){
-			    	  // first big bounce (from below playfield)
-		    		  m.translate(dx[i], 3*Math.abs(Math.sin(t))-7+4*t/Math.PI, dz[i]);
-		    	  } else {
-		    		  m.translate(dx[i], -3+3*Math.abs(Math.sin(t)), dz[i]);
-		    	  }
-		    	  m.scale(.5);
-		    	  m.rotateY(Math.PI/2-enemyAngle[i]);
-	    	  }
-	    	  
-	    	  else if (box[i][1].isVisible) {
-			      //ghost
-	    		  
-	    		  double t = time-runTime[i];
-	    		  //System.out.println("ghost!");
-	    		  double dist = (ghostTime-t)/ghostTime*startDist;
-	    		  double[] ghostFocus = new double [3];	// center of the ghost's motion
-	    		  Vec.set(ghostFocus, Math.cos(enemyAngle[i])*dist,
-	    				  0, Math.sin(enemyAngle[i])*dist);
-	    		  double swayScale = dist/6.0*Math.sin(t*2.);
-	    		  double[] ghostTrans = new double[3];	// side-to-side motion is along this vector
-	    		  Vec.set(ghostTrans, Math.cos(enemyAngle[i]+Math.PI/2.)*swayScale, 0,
-	    				  Math.sin(enemyAngle[i]+Math.PI/2.)*swayScale);
-//
-	    		  if (enemySpeed[i] != 0)
-	    		  {
-	    			  dx[i] = ghostFocus[0]+ghostTrans[0];
-	    		  	dz[i] = ghostFocus[2]+ghostTrans[2];
-	    		  }
-
-	    		  m = box[i][1].getMatrix();
-	    		  m.identity();
-	    		  m.translate(dx[i], 0, dz[i]);
-	    		  m.rotateX(Math.PI/2);
-	    		  m.rotateZ(Math.PI/2.+enemyAngle[i]);
-	    		  m.scale(1.2,1.1,1.5);
-	    		  m.scale(0.5);
-	    		  
-	    		    m = torso[i].getMatrix();
-	    		    m.identity();
-				  		  	
-				  	m = eye_r[i].getMatrix();
-				  	m.identity();
-				  	m.translate(0.35,0.8,-0.35);
-				  	m.scale(0.25,0.25,0.25);
-				  	
-				  	m = eye_l[i].getMatrix();
-				  	m.identity();
-				  	m.translate(-0.35,0.8,-0.35);
-				  	m.scale(0.25,0.25,0.25);
-				  	
-				  	m = shoulder_r[i].getMatrix();
-				  	m.identity();
-				  	m.translate(0.8, 0, -0.25);
-				  	
-				  	m = shoulder_l[i].getMatrix();
-				  	m.identity();
-				  	m.translate(-0.8, 0, -0.25);
-				  		  	
-				  	m = hand_r[i].getMatrix();
-				  	m.identity();
-				  	m.translate(0.4, 0.1, 0);
-			      	m.rotateY(Math.PI*8/12);
-			      	m.scale(0.3,0.25,0.60);
-			      	
-			    	m = hand_l[i].getMatrix();
-				  	m.identity();
-				  	m.translate(-0.4, 0.1, 0);
-			      	m.rotateY(-Math.PI*8/12);
-			      	m.scale(0.3,0.25,0.60);
-	    	  }
-	      }
-	      
-	      for (int i=0;i<enemyNumber;i++){
-	    	  if (dx[i]*dx[i]+dz[i]*dz[i]<(5*5)){ // if one cross the bar
-	    		  if (isShoot[i] == false && isMiss[i] == false && endGame == 0){
-	    			  miss++;
-	    			  if (box[i][0].isVisible == true )
-	    			  {
-	    				  totalBullet = totalBullet-5;
-		    			  ouchTimer = ouchTime;
-	    			  }
-	    			  else if (box[i][1].isVisible == true )
-	    			  {
-	    				  totalBullet = totalBullet-10;
-		    			  ouchTimer = ouchTime;
-	    			  }
-	    			  isMiss[i] = true;
-	    		  }
-	    		  enemySpeed[i] = 0;
-	    		  for (int j=0;j<pumpkinNumber;j++){
-		    		  pumpkin[i*pumpkinNumber+j].setVisible(false);
-		    		  spring[i*springNumber+j].setVisible(false);
-		    	  }
-		    	  stalk[i].setVisible(false);
-		    	  box[i][0].setVisible(false);
-		    	  box[i][1].setVisible(false);
-		    	  isShoot[i] = false;
-		    	  if (Math.random()<.08){ //they have 8% chance every frame to go back to the origin and appear again
-		    		  respawn(i, .7);
-		    	  }
-	    	  }
-	      }
-	      
-	      for (int i=0;i<enemyNumber;i++){
-		      m = spring[i*springNumber].getMatrix(); //the first torus of the spring
-		      m.identity();
-		      m.rotateX(-Math.PI/2);
-		      m.translate(0, 0, 2*pop);
-		      m.rotateY(.1*swingY[i]);
-		      m.scale(.3);
-	      }
-	      for (int i = 0;i <enemyNumber;i++){ // spring movement
-	    	  for (int j=1;j<springNumber;j++){
-	    	  
-	    	  m = spring[i*springNumber+j].getMatrix();
-		      m.identity();	     
-		      m.rotateX(.1*swingX);
-		      m.rotateY(.2*swingY[i]);
-		      m.translate(0, 0, pop+Math.random()*.1);
-
-	    	  }
-	      }
-	      for (int i = 0;i <enemyNumber;i++){ //make spheres to the pumpkin
-	    	  for (int j = 0;j < pumpkinNumber;j++){
-	    		  Geometry pg = pumpkin[i*pumpkinNumber+j];
-	    		  for (int c=0; c < pg.nChildren(); c++) {
-	    			  Matrix cm = pg.child(c).getMatrix();
-	    			  cm.identity();
-	    		  }
-			      m = pumpkin[i*pumpkinNumber+j].getMatrix();
-			      m.identity();
-			      m.translate(0, 0, 8*pop);
-			      m.rotateZ(i*pumpkinNumber+j*Math.PI/5);
-			      m.scale(8*pop,4*pop,6*pop);
-			      m.scale(2);
-			      
-	    	  }
-	      
-	    	  // normally opaque
-	    	  pumpkinFadeColor[i].setTransparency(0.);
-		  }
-	      
-	      for (int i=0;i<enemyNumber;i++){ // the stalk
-		      m = stalk[i].getMatrix();
-		      m.identity();
-		      m.translate(0, 0, 12*pop);
-		      m.scale(.45,.45,1);
-		      m.rotateX(Math.PI/10);
-		      m.scale(2.5);
+		   else if (gameState == 2 && reStart == 0){
+			   
+			   totalLife = -1;
+		   }
+		   else{
+		   
+			   if (reloadCount >= chargeRate){
+				   gunEnergy = Math.min(gunEnergy+1, 100);
+				   reloadCount = 0;
+			   }
+			   
+			   double deltaT = time - previousTime;
+			   
+			   reloadCount = reloadCount + time - previousTime;
+			   previousTime = time;
+			   
+			   if (turn != 0)
+			   {
+				   turningAngle += turn * Math.PI/2. * (time-turnStartTime);
+				   turnStartTime = time;
+			   }
+			   
+			   if(score >= levelScore){
+				   	  
+					  getWorld().child = null;	  
+					  levelScore = levelScore + 20;
+					  bullet = 0;
+	//				  totalLife = totalLife + 20;
+					  totalLife = 100;
+					  gunEnergy = 100;
+					  level++;
+					  enemyNumber++;
+					  newGame();
+			   }
+			   
+			   if(totalLife >0 && totalLife <= 30){
+				   if (time - warningTimer > 2*warningTime){
+					   warningTimer = time;
+				   }
+				   if(time - warningTimer <= warningTime)
+					   showWarning = true;
+				   if(time - warningTimer > warningTime && time - warningTimer < 2*warningTime){
+					   showWarning = false;
+				   }
+			
+				   
+			   }
+			   else 
+				   showWarning = false;
+			   //rotate camera
+			   m = getRenderer().getCamera();
+			   m.identity();
+			   m.rotateY(turningAngle);
+			   
+			   if(totalLife <=0 && gameState == 0){
+				   getWorld().child = null;
+				   gameState = 1;
+			   }
+			   
+		      this.time = time;
 		      
-	      }
-
-	      for (int i=0;i<enemyNumber;i++){
-
-	    	  //what if the pumpkin get shot
-	    	  if (box[i][0].isVisible) {
-	    		  if (time-clickTime[i]<explodeTime && isShoot[i] == true){ //explode!
-	    			  double s = 1+(time - clickTime[i])/explodeTime*3;
-
-	    			  if (stalk[i].isVisible) {
-	    				  // using the visibility of the stalk as a kludge to avoid
-	    				  // playing twice
-	    				  blowup.play();
-	    				  stalk[i].setVisible(false);
-	    			  }
-
-	    			  for (int j=0;j<pumpkinNumber;j++){
-	    				  Geometry pg = pumpkin[i*pumpkinNumber+j];
-
-	    				  for (int c=0; c < pg.nChildren(); c++) {
-	    					  Matrix cm = pg.child(c).getMatrix();
-	    					  double[] pv = pumpkin_vecs[c];
-
-	    					  cm.identity();
-	    					  // expand outward
-	    					  cm.translate((s-1)*pv[0], (s-1)*pv[1] , (s-1)*pv[2]);
-	    				  }
-	    			  }
-
-	    			  // fade out this pumpkin's bits
-	    			  pumpkinFadeColor[i].setTransparency((time - clickTime[i])/explodeTime);
-
-
-	    		  }
-	    		  else if (time-clickTime[i]>=explodeTime && isShoot[i] == true){ //then disappear
-	    			  for (int j=0;j<pumpkinNumber;j++){
-	    				  pumpkin[i*pumpkinNumber+j].setVisible(false);
-	    				  spring[i*springNumber+j].setVisible(false);
-	    			  }
-	    			  stalk[i].setVisible(false);
-	    			  box[i][0].setVisible(false);
-	    			  box[i][1].setVisible(false);
-	    			  isShoot[i] = false;
-	    			  if (Math.random()<.5){ //they have 50% chance to go back to the origin and appear again; or they have to wait until they cross the bar
-	    				  System.out.println("instant respawn "+i);
-	    				  respawn(i, .7);
-	    			  }
-	    			  else
-	    			  {
-	    				  System.out.println("defer respawn "+i);
-	    				  dx[i]=0;
-	    				  dz[i]=0;
-	    			  }
-	    		  }
-	    	  }
-		      //what if a ghost gets shot
-		      else if (box[i][1].isVisible)
-		      {
-	    		  if (time-clickTime[i]<blinkTime && isShoot[i] == true){ // blink!
-	    			  double s = 1+(time - clickTime[i])/blinkTime*5;
-
-
-	    			  m = torso[i].getMatrix();
-	    			  m.scale(1./s, 1./s, s);
-	    		  }
-	    		  else if (time-clickTime[i]>=blinkTime && isShoot[i] == true){ // disappear
-		    		  box[i][1].setVisible(false);
+		      m = getWorld().getMatrix();
+		      m.identity();
+		      //set gun
+		      setGun(time);
+		      
+		            
+		      for (int i=0;i<enemyNumber;i++)
+		    	  swingY[i] = Y[i]*Math.cos(3*(time - swingTime)+Y[i]); //this is how they swing their head;
+		      
+		    pop = 0.5;
+		    
+		    //setEnviornment
+		    m = line.getMatrix();
+		    m.identity();
+		    m.translate(0,-3, 0);
+		    m.rotateX(Math.PI/2);
+		    m.scale(10,10,5);
+		    m = wall.getMatrix();
+		    m.identity();
+		    m.translate(0, -3, 0);
+		    m.rotateX(Math.PI/2);
+		    m.scale(60,60,200);
+		    m = ground.getMatrix();
+		    m.identity();
+		    m.translate(0, -3.5, 0);
+		    m.scale(100,.2,100);
+		    
+		    if (ouchTimer > 0 || ouchScale > 0)
+		    {
+		    	if (ouchTimer > 0) {
+		    		ouchScale = 1;
+		    		ouchTimer -= deltaT;
+		    	}
+		    	if (ouchScale < .001)
+		    	{
+		    		ouchScale = 0;
+		    	}
+		    	
+		    	lineColor.setAmbient(0.5*ouchScale, 0.0, 0.5*(1.-ouchScale));
+			    lineColor.setDiffuse(0.8*ouchScale, 0.0, 0.8*(1.-ouchScale));
+			    lineColor.setSpecular(.2, .5, 0, 20);
+		    	ouchScale /= 1.1;
+		    }
+		    else
+		    {
+		    	lineColor.setAmbient(0.0, 0.0, 0.5);
+			    lineColor.setDiffuse(0.0, 0.0, 0.8);
+			    lineColor.setSpecular(.2, .5, 0, 20);
+		    }
+		    
+		      for (int i=0;i<box.length;i++){ // here is how the enemies move
+	//	    	  m.scale(2);
+		    	  
+		    	  
+		    	  
+		    	  if (box[i][0].isVisible) {
+		    		  // pumpkin movements
 		    		  
-		    		  blowup.play();
-	    			  
-		    		  isShoot[i] = false;
-		    		  if (Math.random()<.5){ //they have 50% chance to go back to the origin and appear again; or they have to wait until they cross the bar
-		    			  System.out.println("instant respawn "+i);
-		    			  respawn(i, .7);
-		    		  }
-		    		  else
+		    		  double t = 2*(time-runTime[i])-i;
+		    		  
+		    		  //enemyAngle[i] = (i/enemyNumber)*2.*Math.PI; //Math.atan2(dz[i], dx[i]);
+		    		  
+			    	  //dx[i] = (i-enemyNumber/2)*8/(1+(time-runTime[i])/4); // set x; they are separated by there index and will closer to each other when they moving towards you 
+			    	  //dz[i] = -startDist+2.5*(2*(time-runTime[i])-i); //moving outward
+		    		  double dist = (pumpkinTime-t)/pumpkinTime*startDist;
+		    		  if (enemySpeed[i] != 0)
 		    		  {
-		    			  System.out.println("defer respawn "+i);
-		    			  dx[i]=0;
-		    			  dz[i]=0;
+		    		  dx[i] = Math.cos(enemyAngle[i])*dist;
+		    		  dz[i] = Math.sin(enemyAngle[i])*dist;
 		    		  }
+		    		  
+			    	  m = box[i][0].getMatrix();
+			    	  m.identity();
+		
+			    	  if (t < Math.PI){
+				    	  // first big bounce (from below playfield)
+			    		  m.translate(dx[i], 3*Math.abs(Math.sin(t))-7+4*t/Math.PI, dz[i]);
+			    	  } else {
+			    		  m.translate(dx[i], -3+3*Math.abs(Math.sin(t)), dz[i]);
+			    	  }
+			    	  m.scale(.5);
+			    	  m.rotateY(Math.PI/2-enemyAngle[i]);
+		    	  }
+		    	  
+		    	  else if (box[i][1].isVisible) {
+				      //ghost
+		    		  
+		    		  double t = time-runTime[i];
+		    		  //System.out.println("ghost!");
+		    		  double dist = (ghostTime-t)/ghostTime*startDist;
+		    		  double[] ghostFocus = new double [3];	// center of the ghost's motion
+		    		  Vec.set(ghostFocus, Math.cos(enemyAngle[i])*dist,
+		    				  0, Math.sin(enemyAngle[i])*dist);
+		    		  double swayScale = dist/6.0*Math.sin(t*2.);
+		    		  double[] ghostTrans = new double[3];	// side-to-side motion is along this vector
+		    		  Vec.set(ghostTrans, Math.cos(enemyAngle[i]+Math.PI/2.)*swayScale, 0,
+		    				  Math.sin(enemyAngle[i]+Math.PI/2.)*swayScale);
+	//
+		    		  if (enemySpeed[i] != 0)
+		    		  {
+		    			  dx[i] = ghostFocus[0]+ghostTrans[0];
+		    		  	dz[i] = ghostFocus[2]+ghostTrans[2];
+		    		  }
+	
+		    		  m = box[i][1].getMatrix();
+		    		  m.identity();
+		    		  m.translate(dx[i], 0, dz[i]);
+		    		  m.rotateX(Math.PI/2);
+		    		  m.rotateZ(Math.PI/2.+enemyAngle[i]);
+		    		  m.scale(1.2,1.1,1.5);
+		    		  m.scale(0.5);
+		    		  
+		    		    m = torso[i].getMatrix();
+		    		    m.identity();
+					  		  	
+					  	m = eye_r[i].getMatrix();
+					  	m.identity();
+					  	m.translate(0.35,0.8,-0.35);
+					  	m.scale(0.25,0.25,0.25);
+					  	
+					  	m = eye_l[i].getMatrix();
+					  	m.identity();
+					  	m.translate(-0.35,0.8,-0.35);
+					  	m.scale(0.25,0.25,0.25);
+					  	
+					  	m = shoulder_r[i].getMatrix();
+					  	m.identity();
+					  	m.translate(0.8, 0, -0.25);
+					  	
+					  	m = shoulder_l[i].getMatrix();
+					  	m.identity();
+					  	m.translate(-0.8, 0, -0.25);
+					  		  	
+					  	m = hand_r[i].getMatrix();
+					  	m.identity();
+					  	m.translate(0.4, 0.1, 0);
+				      	m.rotateY(Math.PI*8/12);
+				      	m.scale(0.3,0.25,0.60);
+				      	
+				    	m = hand_l[i].getMatrix();
+					  	m.identity();
+					  	m.translate(-0.4, 0.1, 0);
+				      	m.rotateY(-Math.PI*8/12);
+				      	m.scale(0.3,0.25,0.60);
 		    	  }
 		      }
+		      
+		      for (int i=0;i<enemyNumber;i++){
+		    	  if (dx[i]*dx[i]+dz[i]*dz[i]<(5*5)){ // if one cross the bar
+		    		  if (isShoot[i] == false && isMiss[i] == false && gameState == 0){
+		    			  miss++;
+		    			  if (box[i][0].isVisible == true )
+		    			  {
+		    				  totalLife = totalLife-5;
+			    			  ouchTimer = ouchTime;
+		    			  }
+		    			  else if (box[i][1].isVisible == true )
+		    			  {
+		    				  totalLife = totalLife-10;
+			    			  ouchTimer = ouchTime;
+		    			  }
+		    			  isMiss[i] = true;
+		    		  }
+		    		  enemySpeed[i] = 0;
+		    		  for (int j=0;j<pumpkinNumber;j++){
+			    		  pumpkin[i*pumpkinNumber+j].setVisible(false);
+			    		  spring[i*springNumber+j].setVisible(false);
+			    	  }
+			    	  stalk[i].setVisible(false);
+			    	  box[i][0].setVisible(false);
+			    	  box[i][1].setVisible(false);
+			    	  isShoot[i] = false;
+			    	  if (Math.random()<.08){ //they have 8% chance every frame to go back to the origin and appear again
+			    		  respawn(i, .7);
+			    	  }
+		    	  }
+		      }
+		      
+		      for (int i=0;i<enemyNumber;i++){
+			      m = spring[i*springNumber].getMatrix(); //the first torus of the spring
+			      m.identity();
+			      m.rotateX(-Math.PI/2);
+			      m.translate(0, 0, 2*pop);
+			      m.rotateY(.1*swingY[i]);
+			      m.scale(.3);
+		      }
+		      for (int i = 0;i <enemyNumber;i++){ // spring movement
+		    	  for (int j=1;j<springNumber;j++){
+		    	  
+		    	  m = spring[i*springNumber+j].getMatrix();
+			      m.identity();	     
+			      m.rotateX(.1*swingX);
+			      m.rotateY(.2*swingY[i]);
+			      m.translate(0, 0, pop+Math.random()*.1);
+	
+		    	  }
+		      }
+		      for (int i = 0;i <enemyNumber;i++){ //make spheres to the pumpkin
+		    	  for (int j = 0;j < pumpkinNumber;j++){
+		    		  Geometry pg = pumpkin[i*pumpkinNumber+j];
+		    		  for (int c=0; c < pg.nChildren(); c++) {
+		    			  Matrix cm = pg.child(c).getMatrix();
+		    			  cm.identity();
+		    		  }
+				      m = pumpkin[i*pumpkinNumber+j].getMatrix();
+				      m.identity();
+				      m.translate(0, 0, 8*pop);
+				      m.rotateZ(i*pumpkinNumber+j*Math.PI/5);
+				      m.scale(8*pop,4*pop,6*pop);
+				      m.scale(2);
+				      
+		    	  }
+		      
+		    	  // normally opaque
+		    	  pumpkinFadeColor[i].setTransparency(0.);
+			  }
+		      
+		      for (int i=0;i<enemyNumber;i++){ // the stalk
+			      m = stalk[i].getMatrix();
+			      m.identity();
+			      m.translate(0, 0, 12*pop);
+			      m.scale(.45,.45,1);
+			      m.rotateX(Math.PI/10);
+			      m.scale(2.5);
+			      
+		      }
+	
+		      for (int i=0;i<enemyNumber;i++){
+	
+		    	  //what if the pumpkin get shot
+		    	  if (box[i][0].isVisible) {
+		    		  if (time-clickTime[i]<explodeTime && isShoot[i] == true){ //explode!
+		    			  double s = 1+(time - clickTime[i])/explodeTime*3;
+	
+		    			  if (stalk[i].isVisible) {
+		    				  // using the visibility of the stalk as a kludge to avoid
+		    				  // playing twice
+		    				  blowup.play();
+		    				  stalk[i].setVisible(false);
+		    			  }
+	
+		    			  for (int j=0;j<pumpkinNumber;j++){
+		    				  Geometry pg = pumpkin[i*pumpkinNumber+j];
+	
+		    				  for (int c=0; c < pg.nChildren(); c++) {
+		    					  Matrix cm = pg.child(c).getMatrix();
+		    					  double[] pv = pumpkin_vecs[c];
+	
+		    					  cm.identity();
+		    					  // expand outward
+		    					  cm.translate((s-1)*pv[0], (s-1)*pv[1] , (s-1)*pv[2]);
+		    				  }
+		    			  }
+	
+		    			  // fade out this pumpkin's bits
+		    			  pumpkinFadeColor[i].setTransparency((time - clickTime[i])/explodeTime);
+	
+	
+		    		  }
+		    		  else if (time-clickTime[i]>=explodeTime && isShoot[i] == true){ //then disappear
+		    			  for (int j=0;j<pumpkinNumber;j++){
+		    				  pumpkin[i*pumpkinNumber+j].setVisible(false);
+		    				  spring[i*springNumber+j].setVisible(false);
+		    			  }
+		    			  stalk[i].setVisible(false);
+		    			  box[i][0].setVisible(false);
+		    			  box[i][1].setVisible(false);
+		    			  isShoot[i] = false;
+		    			  if (Math.random()<.5){ //they have 50% chance to go back to the origin and appear again; or they have to wait until they cross the bar
+		    				  System.out.println("instant respawn "+i);
+		    				  respawn(i, .7);
+		    			  }
+		    			  else
+		    			  {
+		    				  System.out.println("defer respawn "+i);
+		    				  dx[i]=0;
+		    				  dz[i]=0;
+		    			  }
+		    		  }
+		    	  }
+			      //what if a ghost gets shot
+			      else if (box[i][1].isVisible)
+			      {
+		    		  if (time-clickTime[i]<blinkTime && isShoot[i] == true){ // blink!
+		    			  double s = 1+(time - clickTime[i])/blinkTime*5;
+	
+	
+		    			  m = torso[i].getMatrix();
+		    			  m.scale(1./s, 1./s, s);
+		    		  }
+		    		  else if (time-clickTime[i]>=blinkTime && isShoot[i] == true){ // disappear
+			    		  box[i][1].setVisible(false);
+			    		  
+			    		  blowup.play();
+		    			  
+			    		  isShoot[i] = false;
+			    		  if (Math.random()<.5){ //they have 50% chance to go back to the origin and appear again; or they have to wait until they cross the bar
+			    			  System.out.println("instant respawn "+i);
+			    			  respawn(i, .7);
+			    		  }
+			    		  else
+			    		  {
+			    			  System.out.println("defer respawn "+i);
+			    			  dx[i]=0;
+			    			  dz[i]=0;
+			    		  }
+			    	  }
+			      }
+			   }
 		   }
 	   }
 	   Color C = new Color(255,255,255,100); 
 
 	   public void drawOverlay(Graphics g) {
-	              g.setColor(Color.white);
-	              //draw the front sight
-	              g.drawOval(mouseX-50, mouseY-50, 100, 100);
-	              g.drawLine(mouseX-50, mouseY, mouseX+50, mouseY);
-	              g.drawLine(mouseX, mouseY-50, mouseX, mouseY+50);
-	              if(endGame != 1){
-	              g.setColor(C);
-	              g.fillOval((int)(150*1.0)-50+400+180, (int)(150*1.0)-110-20,100,100);
-	              g.setColor(Color.green);
-	              g.fillArc((int)(150*1.0)-50+400+180, (int)(150*1.0)-110-20, 100, 100, 135-(int)(turningAngle/Math.PI*360/2), -90);
-	              //g.setColor(Color.RED);
-	              for(int i=0; i<enemyNumber; i++){
-	                  if(box[i][0].isVisible == true){
-	                      g.setColor(Color.RED);
-	                      double tempDouble = (box[i][0].getMatrix().get(3, 0))*box[i][0].vertices[0][0] + 
-	                      (box[i][0].getMatrix().get(3, 1))*box[i][0].vertices[0][1] +
-	                      (box[i][0].getMatrix().get(3, 2))*box[i][0].vertices[0][2] +
-	                      (box[i][0].getMatrix().get(3, 3))*box[i][0].vertices[0][3];
-	                      
-	                      g.fillOval((int)(((((box[i][0].getMatrix().get(0, 0))*box[i][0].vertices[0][0] + 
-	                              (box[i][0].getMatrix().get(0, 1))*box[i][0].vertices[0][1] +
-	                              (box[i][0].getMatrix().get(0, 2))*box[i][0].vertices[0][2] +
-	                              (box[i][0].getMatrix().get(0, 3))*box[i][0].vertices[0][3])/tempDouble)*0.8 + 150)*1.0)+400+180, (int)(((((box[i][0].getMatrix().get(2, 0))*box[i][0].vertices[0][0] + 
-	                              (box[i][0].getMatrix().get(2, 1))*box[i][0].vertices[0][1] +
-	                              (box[i][0].getMatrix().get(2, 2))*box[i][0].vertices[0][2] +
-	                              (box[i][0].getMatrix().get(2, 3))*box[i][0].vertices[0][3])/tempDouble)*0.8 + 150)*1.0)-60-20, 5, 5);
-	                  } if(box[i][1].isVisible == true){
-	                      g.setColor(Color.blue);
-	                      
-	                      g.fillOval((int)(dx[i]*0.8+150+400+180),(int)(dz[i]*0.8+150-60-20),5,5);
-	                  }
-	                  
-	                  
-	              }
-	              g.setColor(Color.green);
-	              g.fillOval((int)(145*1.0)+400+180+2, (int)(150*1.0)-60-20-1, 5, 5);
+		   
+           if(gameState == 0){
+           g.setColor(C);
+           g.fillOval((int)(150*1.0)-50+400+180, (int)(150*1.0)-110-20,100,100);
+           g.setColor(Color.green);
+           g.fillArc((int)(150*1.0)-50+400+180, (int)(150*1.0)-110-20, 100, 100, 135-(int)(turningAngle/Math.PI*360/2), -90);
+           //g.setColor(Color.RED);
+           for(int i=0; i<enemyNumber; i++){
+               if(box[i][0].isVisible == true){
+                   g.setColor(Color.RED);
+                   double tempDouble = (box[i][0].getMatrix().get(3, 0))*box[i][0].vertices[0][0] + 
+                   (box[i][0].getMatrix().get(3, 1))*box[i][0].vertices[0][1] +
+                   (box[i][0].getMatrix().get(3, 2))*box[i][0].vertices[0][2] +
+                   (box[i][0].getMatrix().get(3, 3))*box[i][0].vertices[0][3];
+                   
+                   g.fillOval((int)(((((box[i][0].getMatrix().get(0, 0))*box[i][0].vertices[0][0] + 
+                           (box[i][0].getMatrix().get(0, 1))*box[i][0].vertices[0][1] +
+                           (box[i][0].getMatrix().get(0, 2))*box[i][0].vertices[0][2] +
+                           (box[i][0].getMatrix().get(0, 3))*box[i][0].vertices[0][3])/tempDouble)*0.8 + 150)*1.0)+400+180, (int)(((((box[i][0].getMatrix().get(2, 0))*box[i][0].vertices[0][0] + 
+                           (box[i][0].getMatrix().get(2, 1))*box[i][0].vertices[0][1] +
+                           (box[i][0].getMatrix().get(2, 2))*box[i][0].vertices[0][2] +
+                           (box[i][0].getMatrix().get(2, 3))*box[i][0].vertices[0][3])/tempDouble)*0.8 + 150)*1.0)-60-20, 5, 5);
+               } if(box[i][1].isVisible == true){
+                   g.setColor(Color.blue);
+                   
+                   g.fillOval((int)(dx[i]*0.8+150+400+180),(int)(dz[i]*0.8+150-60-20),5,5);
+               }
+               
+               
+           }
+           g.setColor(Color.green);
+           g.fillOval((int)(145*1.0)+400+180+2, (int)(150*1.0)-60-20-1, 5, 5);
 
+           }
+           
+           if( gameState == 2 ){
+         	  
+        	   g.drawImage(bg1, 0, 0, null);
+        	   g.setFont(bigFont);
+        	   g.setColor(Color.orange);
+        	   g.fillRect(350, 475, 100, 50);
+        	   g.setColor(Color.black);
+        	   g.drawString("Play", 375, 510);
+	                  
+           }
+           else if ( gameState == 1 ){
+        	   g.drawImage(bg2, 0, 0, null);
+               g.setFont(bigFont);
+               g.setColor(Color.orange);
+               g.fillRect(350, 475, 100, 50);
+               g.setColor(Color.black);
+               g.drawString("Play", 375, 510);
+               g.setColor(Color.red);
+               g.drawString("Game Over !", 210+100, 160+50);
+               g.drawString("Total Score: "+score, 200+100, 190+50);
+               g.drawString("Final  Level: "+level, 200+100, 220+50);
+           }
+           else{ 
+        	   if (!showWarning){
+        		   for (int i=0;i<totalLife;i++){
+        			   g.setColor(new Color(Math.max(0,(255-3*i)),Math.min(255,0+3*i),0));
+        			   g.fillRect(50+3*i, 70, 3, 14);
+	               }
+        	   }
+	              for (int i=0;i<gunEnergy;i++){
+		           	   g.setColor(new Color(200,Math.min(255,50+3*i),0));
+		           	   g.fillRect(50+3*i, 100, 3, 14);
+		          }
+	              g.setColor(Color.white);
+	              g.drawRect(50, 70, 300, 14);
+	              g.drawRect(50, 100, 300, 14);
+	              g.drawString("score to next level: "+levelScore, 50, 30);
+	              g.drawString("Score: "+score, 50, 50);
+	              g.drawString("Energy: "+gunEnergy, 60, 112);
+	              g.drawString("Life: "+ totalLife, 60, 82);
+	              g.drawString("level: "+ level, 50, 130);
+           
+           
+           
+	              if(showWarning){
+	            	  g.setFont(Font1);
+	            	  g.setColor(Color.red);
+	            	  g.drawString("Warning!! ", W/2 - 50, 200);
+	            	  g.drawString("Life is low!! ", W/2 - 50, 250);
 	              }
-	              
-	              if( endGame == 1 ){
-	                  g.setFont(bigFont);
-	                  g.setColor(Color.cyan);
-	                  g.fillRect(0, 0, 100, 50);
-	                  g.setColor(Color.black);
-	                  g.drawString("restart", 10, 30);
-	                  g.drawString("Game Over !", 210+100, 160+50);
-	                  g.drawString("Total Score: "+score, 200+100, 190+50);
-	                  g.drawString("Final  Level: "+level, 200+100, 220+50);
-	              }else{ 
-	              
-	            	  for (int i=0;i<totalBullet;i++){
-	   	           	   g.setColor(new Color(Math.max(0,(255-3*i)),Math.min(255,0+3*i),0));
-	   	           	   g.fillRect(50+3*i, 70, 3, 14);
-	   	              }
-	   	              for (int i=0;i<gunEnergy;i++){
-	   		           	   g.setColor(new Color(200,Math.min(255,50+3*i),0));
-	   		           	   g.fillRect(50+3*i, 100, 3, 14);
-	   		          }
-		              g.setColor(Color.white);
-		              g.drawRect(50, 70, 300, 14);
-		              g.drawRect(50, 100, 300, 14);
-		              g.drawString("score to next level: "+levelScore, 50, 30);
-		              g.drawString("Score: "+score, 50, 50);
-		              g.drawString("Energy: "+gunEnergy, 60, 112);
-		              g.drawString("Life: "+ totalBullet, 60, 82);
-		              g.drawString("level: "+ level, 50, 130);
-	              
-	              
-	              
-	              if(totalBullet >0 && totalBullet <= 15){
-	                  g.drawString("Warning!! ", 280+120, 30);
-	                  g.drawString("life is low!! ", 250+120, 50);
-	              }
-	              }
-	          }
+           }
+           //draw the front sight
+           g.setColor(Color.white);
+           g.drawOval(mouseX-50, mouseY-50, 100, 100);
+           g.drawLine(mouseX-50, mouseY, mouseX+50, mouseY);
+           g.drawLine(mouseX, mouseY-50, mouseX, mouseY+50);
+       }
 
 	   
-		
 	   public void setGun(double time){
 //		   	  gunTheta = -.3*Math.atan2(mouseX-800/2,50);
 //		      gunPhi = -.3*Math.atan2(mouseY-600/2, Math.sqrt(Math.pow((mouseX-800/2),2)+Math.pow(50, 2)));
