@@ -22,7 +22,7 @@ public class game_new extends RenderApplet{
 	static final double pumpkinTime = 20.;	// how long a pumpkin takes to approach
 	static final double startDist = 50.;		// distance from which enemies appear
 	static final double ouchTime = .25;
-	static final double chargeRate = .15; // energy charges rate
+	
 	static final double warningTime = .25;
 	static final double levelUpTime = 1.5;
 	static final double ringRadius = 10;// radius of the bunker
@@ -50,7 +50,7 @@ public class game_new extends RenderApplet{
 	int H, W; //window size
 	int mouseX, mouseY; //mouse position
 	
-	
+	double chargeRate = .15; // energy charges rate
 	double reloadCount = 0;
 	double previousTime = 0;
 	double turningAngle = 0;
@@ -98,7 +98,7 @@ public class game_new extends RenderApplet{
 	Geometry lvlUpAniPiece1[] = new Geometry[lvlUpAniPieceNum];
 //	Geometry lvlUpAniPiece2[] = new Geometry[lvlUpAniPieceNum];
 	Geometry g = new Geometry();
-//	Geometry obj1;
+	Geometry obj1;
 	Matrix m;
 	
 
@@ -370,8 +370,8 @@ public class game_new extends RenderApplet{
 			torso = new Geometry[enemyNumber];
 			hand_r = new Geometry[enemyNumber];
 			hand_l = new Geometry[enemyNumber];
+			obj1 = new Geometry();
 			
-//			obj1 = new Geometry();
 			
 			lvlUpAniPiece1 = new Geometry[lvlUpAniPieceNum];
 //			lvlUpAniPiece2 = new Geometry[lvlUpAniPieceNum];
@@ -413,9 +413,7 @@ public class game_new extends RenderApplet{
 	    	  pumpkinFadeColor[i].copy(pumpkinColor1);
 	    	  pumpkinFadeColor[i].setTransparency(0.);
 	      }
-		
-//	      	obj1 = getWorld().add(Obj.newObj("wateringcan.obj"));
-//	      	obj1.setMaterial(pumpkinColor1);
+	      	
 	      //add geometries
 	      	gun = getWorld().add();
 	      	gunBody = gun.add().sphere(16);
@@ -446,7 +444,9 @@ public class game_new extends RenderApplet{
 	      //the Hierarchy of the enemy
 	      //cube for box->first torus for spring->rest toruses for spring->all spheres for pumpkin->cylinder for stalk
 	      //add all boxes to world
-
+	      	obj1 = getWorld().add(obj1 = Obj.newObj("wateringcan.obj"));
+	      	Obj.normalizeSize(obj1);
+	      	obj1.setMaterial(pumpkinColor1);
 	      	for (int i=0;i<box.length;i++){
 	      	box[i][0] = getWorld().add().cube();
 	      	
@@ -590,7 +590,9 @@ public class game_new extends RenderApplet{
 			   totalLife = -1;
 		   }
 		   else{//game playing!! animation playing in game should be here 
-			  
+			   m = obj1.getMatrix();
+			   m.translate(0,-1, 0);
+//			   obj1.
 			   if (reloadCount >= chargeRate){
 				   gunEnergy = Math.min(gunEnergy+1, 100);
 				   reloadCount = 0;
@@ -668,6 +670,7 @@ public class game_new extends RenderApplet{
 			   }
 			   
 			   if(totalLife >0 && totalLife <= 30){
+				   chargeRate = .075;
 				   if (!isAlarm){
 					   alarm.loop();
 					   isAlarm = true;
@@ -685,6 +688,7 @@ public class game_new extends RenderApplet{
 				   
 			   }
 			   else {
+				   	chargeRate = .15;
 //				   if (isAlarm){
 					   alarm.stop();
 					   isAlarm = false;
