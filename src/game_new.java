@@ -8,6 +8,7 @@ import java.awt.Event;
 import java.awt.Graphics;
 import java.awt.image.MemoryImageSource;
 import java.io.IOException;
+import java.io.InputStream;
 import java.applet.*;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -370,7 +371,7 @@ public class game_new extends RenderApplet{
 			torso = new Geometry[enemyNumber];
 			hand_r = new Geometry[enemyNumber];
 			hand_l = new Geometry[enemyNumber];
-			obj1 = new Geometry();
+			//obj1 = new Geometry();
 			
 			
 			lvlUpAniPiece1 = new Geometry[lvlUpAniPieceNum];
@@ -444,9 +445,18 @@ public class game_new extends RenderApplet{
 	      //the Hierarchy of the enemy
 	      //cube for box->first torus for spring->rest toruses for spring->all spheres for pumpkin->cylinder for stalk
 	      //add all boxes to world
-	      	obj1 = getWorld().add(obj1 = Obj.newObj("wateringcan.obj"));
-	      	Obj.normalizeSize(obj1);
-	      	obj1.setMaterial(pumpkinColor1);
+	      	
+	      	String wcs = null;
+	      	
+	      	try {
+	      		InputStream wcstream = getClass().getResource("wateringcan.obj").openStream();
+	      		byte [] wcb = new byte [wcstream.available()];
+	      		wcstream.read(wcb);
+	      		wcs = new String(wcb);
+    		    
+	      	} catch (IOException e) {
+	      		e.printStackTrace();
+	      	}
 	      	for (int i=0;i<box.length;i++){
 	      	box[i][0] = getWorld().add().cube();
 	      	
@@ -474,6 +484,11 @@ public class game_new extends RenderApplet{
 	          previousTime = time;
 	      	
 	      }
+	      	obj1 = box[0][0].add(Obj.newObj(wcs));
+	      	Obj.normalizeSize(obj1);
+	      	obj1.getMatrix().scale(2.0);
+	      	obj1.setMaterial(pumpkinColor1);
+	      	
 	      	//add first torus to box
 	      for (int i=0;i<enemyNumber;i++){
 	    	  spring[i*springNumber] = box[i][0].add().torus(16, 16, .2);
@@ -590,8 +605,8 @@ public class game_new extends RenderApplet{
 			   totalLife = -1;
 		   }
 		   else{//game playing!! animation playing in game should be here 
-			   m = obj1.getMatrix();
-			   m.translate(0,-1, 0);
+			   //m = obj1.getMatrix();
+			   //m.translate(0,10, 0);
 //			   obj1.
 			   if (reloadCount >= chargeRate){
 				   gunEnergy = Math.min(gunEnergy+1, 100);
