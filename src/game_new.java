@@ -227,7 +227,7 @@ public class game_new extends RenderApplet{
 			levelUpSound = getAudioClip(getCodeBase(), "sounds/levelup.wav");
 		}
 		if (wLaugh == null) {
-			wLaugh = getAudioClip(getCodeBase(), "sounds/wLaugh.wav");
+			wLaugh = getAudioClip(getCodeBase(), "sounds/wlaugh.wav");
 		}
 		if (hit == null) {
 			hit = getAudioClip(getCodeBase(), "sounds/hit.wav");
