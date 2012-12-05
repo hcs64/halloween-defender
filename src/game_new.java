@@ -1051,22 +1051,26 @@ public class game_new extends RenderApplet{
         	   if (!showWarning){
         		   for (int i=0;i<totalLife;i++){
         			   g.setColor(new Color(Math.max(0,(255-3*i)),Math.min(255,0+3*i),0));
-        			   g.fillRect(50+3*i, 70, 3, 14);
+        			   g.fillRect(30+3*i, 90, 3, 14);
 	               }
         	   }
 	              for (int i=0;i<gunEnergy;i++){
 		           	   g.setColor(new Color(200,Math.min(255,50+3*i),0));
-		           	   g.fillRect(50+3*i, 100, 3, 14);
+		           	   g.fillRect(30+3*i, 110, 3, 14);
 		          }
-	              g.setFont(Font2);
+	              
 	              g.setColor(Color.white);
-	              g.drawRect(50, 70, 300, 14);
-	              g.drawRect(50, 100, 300, 14);
-	              g.drawString("score to next level: "+levelScore, 50, 30);
-	              g.drawString("Score: "+score, 50, 50);
-	              g.drawString("Energy: "+gunEnergy, 60, 112);
-	              g.drawString("Life: "+ totalLife, 60, 82);
-	              g.drawString("level: "+ level, 50, 130);
+	              g.drawRect(30, 90, 300, 14);
+	              g.drawRect(30, 110, 300, 14);
+	              
+	              g.setFont(Font1);
+	              g.drawString("NEXT LEVEL: "+levelScore, W/2-100, 30);
+	              g.drawString("level: "+ level, 50, 30);
+	              g.drawString(""+score, W/2, 70);
+	              g.setFont(Font2);
+	              g.drawString("Energy: "+gunEnergy, 40, 122);
+	              g.drawString("Life: "+ totalLife, 40, 102);
+	              
            
            
            
