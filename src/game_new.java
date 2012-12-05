@@ -96,7 +96,7 @@ public class game_new extends RenderApplet{
 	Geometry lvlUpAniPiece1[] = new Geometry[lvlUpAniPieceNum];
 //	Geometry lvlUpAniPiece2[] = new Geometry[lvlUpAniPieceNum];
 	Geometry g = new Geometry();
-
+//	Geometry obj1;
 	Matrix m;
 	
 
@@ -105,6 +105,7 @@ public class game_new extends RenderApplet{
 	AudioClip gunShot = null;
 	AudioClip blowup = null;
 	AudioClip levelUpSound = null;
+	AudioClip wLaugh = null;
 	JOrbisBGM bgm = null;
 	Image bg1,bg2;
 	
@@ -197,7 +198,9 @@ public class game_new extends RenderApplet{
 			isCapturedClick = false;
 		}
 		if (gameState != 0 && x< 450 && x > 350 && y < 525 && y > 475){
+			wLaugh.play();
 			reStart = 1;
+			
 		}
 		return false;
 	}
@@ -218,6 +221,9 @@ public class game_new extends RenderApplet{
 		}
 		if (levelUpSound == null) {
 			levelUpSound = getAudioClip(getCodeBase(), "sounds/levelup.wav");
+		}
+		if (wLaugh == null) {
+			wLaugh = getAudioClip(getCodeBase(), "sounds/wLaugh.wav");
 		}
 		if (bgm == null) {
 			bgm = new JOrbisBGM();
@@ -326,7 +332,9 @@ public class game_new extends RenderApplet{
 		stalkColor.setSpecular(0, 0, 0, 1);
 		
 		lvlUpAniPieceColor1 = new Material();
-
+		lvlUpAniPieceColor1.setAmbient(0.0, 0.0, 0.5);
+		lvlUpAniPieceColor1.setDiffuse(0.0, 0.0, 0.8);
+		lvlUpAniPieceColor1.setSpecular(.2, .5, 0, 20);
 		
 
 	}
@@ -352,6 +360,8 @@ public class game_new extends RenderApplet{
 			torso = new Geometry[enemyNumber];
 			hand_r = new Geometry[enemyNumber];
 			hand_l = new Geometry[enemyNumber];
+			
+//			obj1 = new Geometry();
 			
 			lvlUpAniPiece1 = new Geometry[lvlUpAniPieceNum];
 //			lvlUpAniPiece2 = new Geometry[lvlUpAniPieceNum];
@@ -394,7 +404,8 @@ public class game_new extends RenderApplet{
 	    	  pumpkinFadeColor[i].setTransparency(0.);
 	      }
 		
-	      
+//	      	obj1 = getWorld().add(Obj.newObj("wateringcan.obj"));
+//	      	obj1.setMaterial(pumpkinColor1);
 	      //add geometries
 	      	gun = getWorld().add();
 	      	gunBody = gun.add().sphere(16);
@@ -516,7 +527,7 @@ public class game_new extends RenderApplet{
 	    	  }
 	      
 	      for (int i = 0; i < lvlUpAniPiece1.length; i++){
-	    	  lvlUpAniPiece1[i] = getWorld().add().sphere(8);
+	    	  lvlUpAniPiece1[i] = getWorld().add().cube();
 	    	  lvlUpAniPiece1[i].setMaterial(lvlUpAniPieceColor1);
 	      }
 
@@ -569,7 +580,7 @@ public class game_new extends RenderApplet{
 			   totalLife = -1;
 		   }
 		   else{//game playing!! animation playing in game should be here 
-		   
+			  
 			   if (reloadCount >= chargeRate){
 				   gunEnergy = Math.min(gunEnergy+1, 100);
 				   reloadCount = 0;
@@ -584,16 +595,18 @@ public class game_new extends RenderApplet{
 					   angle = i*2*Math.PI/lvlUpAniPieceNum;
 					   m.translate(0, -3, 0);
 //					   m.translate(0, -i*.4, 0);
-					   m.translate(ringRadius * Math.sin(angle), lTime*6, ringRadius * Math.cos(angle));
+//					   m.translate(ringRadius * Math.sin(angle), lTime*6, ringRadius * Math.cos(angle));
+					   
 					   m.rotateY(-angle);
+					   m.translate(0, lTime*6, -ringRadius);
 					   if (lTime<levelUpTime/2)
-						   m.scale(1.2,1.2*lTime*4,1.2);
+						   m.scale(1.5,1.2*lTime*6,.5);
 					   else
-						   m.scale(1.2, 1.2*(levelUpTime-lTime)*4, 1.2);
-					   double scale = lTime/levelUpTime;
-					   lvlUpAniPieceColor1.setAmbient(0, scale/2, 1-scale/2);
-					   lvlUpAniPieceColor1.setDiffuse(0, scale/2, 1-scale/2);
-					   lvlUpAniPieceColor1.setSpecular(.5 ,.2, 0, 20);
+						   m.scale(1.5, 1.2*(levelUpTime-lTime)*6, .5);
+//					   double scale = lTime/levelUpTime;
+//					   lvlUpAniPieceColor1.setAmbient(0, scale/2, 1-scale/2);
+//					   lvlUpAniPieceColor1.setDiffuse(0, scale/2, 1-scale/2);
+//					   lvlUpAniPieceColor1.setSpecular(.5 ,.2, 0, 20);
 		
 					   
 				   }	   
