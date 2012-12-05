@@ -16,8 +16,22 @@ import com.jcraft.jorbis.JOrbisBGM;
 
 public class game_new extends RenderApplet{
 	
+	static final double explodeTime = .25;	// how long a pumpkin takes to explode
+	static final double blinkTime = .15;		// how long a ghost takes to blink out
+	static final double ghostTime = 20.;// how long a ghost takes to approach
+	static final double pumpkinTime = 20.;	// how long a pumpkin takes to approach
+	static final double startDist = 50.;		// distance from which enemies appear
+	static final double ouchTime = .25;
+	static final double chargeRate = .15; // energy charges rate
+	static final double warningTime = .25;
+	static final double levelUpTime = 1.5;
+	static final double ringRadius = 10;// radius of the bunker
+	static final int lvlUpAniPieceNum = 20;
+	
 	Font bigFont = new Font("Helvetica", Font.BOLD, 23);
 	Font Font1 = new Font("Broadway", Font.BOLD, 26);
+	Font Font2 = new Font("Broadway", Font.BOLD, 12);
+	Font Font3 = new Font("Broadway", Font.BOLD, 72);
 	int enemyNumber = 3;
 	int springNumber = 10;
 	int pumpkinNumber = 4;
@@ -36,6 +50,7 @@ public class game_new extends RenderApplet{
 	int H, W; //window size
 	int mouseX, mouseY; //mouse position
 	
+	
 	double reloadCount = 0;
 	double previousTime = 0;
 	double turningAngle = 0;
@@ -50,7 +65,7 @@ public class game_new extends RenderApplet{
 	double point[] = new double[3];
 	double pumpkin_vecs[][] = new double[pumpkinSections*pumpkinSections][5]; // x, y, z, u, v
 	double warningTimer = 0;
-	
+	double levelUpTimer = 0;
 	boolean isCapturedClick = true;
 	boolean isShoot[] = new boolean[enemyNumber];
 	boolean showWarning = false;
@@ -59,6 +74,8 @@ public class game_new extends RenderApplet{
 	Material gunColor,barrelColor,gunheadColor,gunRing1Color,gunRing2Color,gunRing3Color,laserColor,gunWingColor;
 	Material pumpkinFadeColor[] = new Material[enemyNumber];
 	Material shirtColor, skinColor, bodyColor, eyeColor;	// ghost
+	Material lvlUpAniPieceColor1;
+	Material lvlUpAniPieceColor2[] = new Material[lvlUpAniPieceNum];
 	
 	Geometry box[][] = new Geometry[enemyNumber][2];
 	Geometry stalk[] = new Geometry[enemyNumber];
@@ -75,24 +92,19 @@ public class game_new extends RenderApplet{
 	Geometry torso[] = new Geometry[enemyNumber];
 	Geometry hand_r[] = new Geometry[enemyNumber];
 	Geometry hand_l[] = new Geometry[enemyNumber];
-	
+	//level up animation
+	Geometry lvlUpAniPiece1[] = new Geometry[lvlUpAniPieceNum];
+//	Geometry lvlUpAniPiece2[] = new Geometry[lvlUpAniPieceNum];
 	Geometry g = new Geometry();
 
 	Matrix m;
 	
-	static final double explodeTime = .25;	// how long a pumpkin takes to explode
-	static final double blinkTime = .15;		// how long a ghost takes to blink out
-	static final double ghostTime = 20.;// how long a ghost takes to approach
-	static final double pumpkinTime = 20.;	// how long a pumpkin takes to approach
-	static final double startDist = 50.;		// distance from which enemies appear
-	static final double ouchTime = .25;
-	static final double chargeRate = .15; // energy charges rate
-	static final double warningTime = .25;
-	
+
 	Texture texture;
 	
 	AudioClip gunShot = null;
 	AudioClip blowup = null;
+	AudioClip levelUpSound = null;
 	JOrbisBGM bgm = null;
 	Image bg1,bg2;
 	
@@ -204,6 +216,9 @@ public class game_new extends RenderApplet{
 		if (blowup == null) {
 			blowup = getAudioClip(getCodeBase(), "sounds/pop8.wav");
 		}
+		if (levelUpSound == null) {
+			levelUpSound = getAudioClip(getCodeBase(), "sounds/levelup.wav");
+		}
 		if (bgm == null) {
 			bgm = new JOrbisBGM();
 			bgm.set_URL(getClass().getResource("sounds/SD2D_22.ogg"));
@@ -217,7 +232,7 @@ public class game_new extends RenderApplet{
 		H = getRenderer().getH();
 		W = getRenderer().getW();
 
-		setBgColor(0, .5, 0);
+		setBgColor(0, 0, 0);
 
 		addLight( 1, 1, 1, .8, .85, 1);
 		addLight(-1,-1,-1, 1, 1, 1);
@@ -309,6 +324,10 @@ public class game_new extends RenderApplet{
 		stalkColor.setAmbient(.0, 0.2, .0);
 		stalkColor.setDiffuse(0.0, 0, 0);
 		stalkColor.setSpecular(0, 0, 0, 1);
+		
+		lvlUpAniPieceColor1 = new Material();
+
+		
 
 	}
 
@@ -334,6 +353,8 @@ public class game_new extends RenderApplet{
 			hand_r = new Geometry[enemyNumber];
 			hand_l = new Geometry[enemyNumber];
 			
+			lvlUpAniPiece1 = new Geometry[lvlUpAniPieceNum];
+//			lvlUpAniPiece2 = new Geometry[lvlUpAniPieceNum];
 			isCapturedClick = true;
 			point = new double[3];
 			//time = 0;
@@ -373,6 +394,7 @@ public class game_new extends RenderApplet{
 	    	  pumpkinFadeColor[i].setTransparency(0.);
 	      }
 		
+	      
 	      //add geometries
 	      	gun = getWorld().add();
 	      	gunBody = gun.add().sphere(16);
@@ -394,8 +416,8 @@ public class game_new extends RenderApplet{
 	      	gunWing.setMaterial(gunWingColor);
 	      	laser.setMaterial(laserColor);
 	      	
-	      	wall = getWorld().add().torus(16, 16, .2);
-	      	wall.setMaterial(wallColor);
+//	      	wall = getWorld().add().torus(16, 16, .2);
+//	      	wall.setMaterial(wallColor);
 	      	ground = getWorld().add().cube();
 	      	ground.setMaterial(groundColor);
 	      	line = getWorld().add().torus(8, 8, .2);
@@ -493,12 +515,19 @@ public class game_new extends RenderApplet{
 		    	  pumpkin[i*pumpkinNumber+j].setMaterial(pumpkinFadeColor[i]);
 	    	  }
 	      
+	      for (int i = 0; i < lvlUpAniPiece1.length; i++){
+	    	  lvlUpAniPiece1[i] = getWorld().add().sphere(8);
+	    	  lvlUpAniPiece1[i].setMaterial(lvlUpAniPieceColor1);
+	      }
+
+	     
 	      
 	      for (int i = 0; i < enemyNumber; i++)
 	      {
 	    	  respawn(i, 1);
 	      }
-
+	      
+	      
 	   }
 
 //	   double waveDuration = 2.0; // DURATION OF ONE WAVE ANIMATION
@@ -539,13 +568,56 @@ public class game_new extends RenderApplet{
 			   
 			   totalLife = -1;
 		   }
-		   else{
+		   else{//game playing!! animation playing in game should be here 
 		   
 			   if (reloadCount >= chargeRate){
 				   gunEnergy = Math.min(gunEnergy+1, 100);
 				   reloadCount = 0;
 			   }
 			   
+			   if (time - levelUpTimer < levelUpTime){
+				   double lTime = time - levelUpTimer;
+				   double angle;
+				   for (int i=0;i<lvlUpAniPiece1.length;i++){
+					   m = lvlUpAniPiece1[i].getMatrix();
+					   m.identity();
+					   angle = i*2*Math.PI/lvlUpAniPieceNum;
+					   m.translate(0, -3, 0);
+//					   m.translate(0, -i*.4, 0);
+					   m.translate(ringRadius * Math.sin(angle), lTime*6, ringRadius * Math.cos(angle));
+					   m.rotateY(-angle);
+					   if (lTime<levelUpTime/2)
+						   m.scale(1.2,1.2*lTime*4,1.2);
+					   else
+						   m.scale(1.2, 1.2*(levelUpTime-lTime)*4, 1.2);
+					   double scale = lTime/levelUpTime;
+					   lvlUpAniPieceColor1.setAmbient(0, scale/2, 1-scale/2);
+					   lvlUpAniPieceColor1.setDiffuse(0, scale/2, 1-scale/2);
+					   lvlUpAniPieceColor1.setSpecular(.5 ,.2, 0, 20);
+		
+					   
+				   }	   
+			   }
+			   
+
+			   else{
+				   for (int i=0;i<lvlUpAniPiece1.length;i++){
+					   m = lvlUpAniPiece1[i].getMatrix();
+					   m.identity();
+					   m.translate(0,-1000,0);
+				   }
+
+				   lvlUpAniPieceColor1.setAmbient(0.0, 0.0, 0.5);
+				   lvlUpAniPieceColor1.setDiffuse(0.0, 0.0, 0.8);
+				   lvlUpAniPieceColor1.setSpecular(.2, .5, 0, 20);
+				    
+//				   for (int i=0;i<lvlUpAniPiece2.length;i++){
+//					   m = lvlUpAniPiece2[i].getMatrix();
+//					   m.identity();
+//					   m.translate(0,-1000,0);
+//				   }
+			   }
+				   
 			   double deltaT = time - previousTime;
 			   
 			   reloadCount = reloadCount + time - previousTime;
@@ -558,7 +630,7 @@ public class game_new extends RenderApplet{
 			   }
 			   
 			   if(score >= levelScore){
-				   	  
+				   	  levelUpTimer = time;
 					  getWorld().child = null;	  
 					  levelScore = levelScore + 20;
 					  bullet = 0;
@@ -567,7 +639,9 @@ public class game_new extends RenderApplet{
 					  gunEnergy = 100;
 					  level++;
 					  enemyNumber++;
+					  levelUpSound.play();
 					  newGame();
+					  
 			   }
 			   
 			   if(totalLife >0 && totalLife <= 30){
@@ -613,11 +687,11 @@ public class game_new extends RenderApplet{
 		    m.translate(0,-3, 0);
 		    m.rotateX(Math.PI/2);
 		    m.scale(10,10,5);
-		    m = wall.getMatrix();
-		    m.identity();
-		    m.translate(0, -3, 0);
-		    m.rotateX(Math.PI/2);
-		    m.scale(60,60,200);
+//		    m = wall.getMatrix();
+//		    m.identity();
+//		    m.translate(0, -3, 0);
+//		    m.rotateX(Math.PI/2);
+//		    m.scale(60,60,200);
 		    m = ground.getMatrix();
 		    m.identity();
 		    m.translate(0, -3.5, 0);
@@ -917,31 +991,37 @@ public class game_new extends RenderApplet{
            g.setColor(Color.green);
            g.fillArc((int)(150*1.0)-50+400+180, (int)(150*1.0)-110-20, 100, 100, 135-(int)(turningAngle/Math.PI*360/2), -90);
            //g.setColor(Color.RED);
-           for(int i=0; i<enemyNumber; i++){
-               if(box[i][0].isVisible == true){
-                   g.setColor(Color.RED);
-                   double tempDouble = (box[i][0].getMatrix().get(3, 0))*box[i][0].vertices[0][0] + 
-                   (box[i][0].getMatrix().get(3, 1))*box[i][0].vertices[0][1] +
-                   (box[i][0].getMatrix().get(3, 2))*box[i][0].vertices[0][2] +
-                   (box[i][0].getMatrix().get(3, 3))*box[i][0].vertices[0][3];
-                   
-                   g.fillOval((int)(((((box[i][0].getMatrix().get(0, 0))*box[i][0].vertices[0][0] + 
-                           (box[i][0].getMatrix().get(0, 1))*box[i][0].vertices[0][1] +
-                           (box[i][0].getMatrix().get(0, 2))*box[i][0].vertices[0][2] +
-                           (box[i][0].getMatrix().get(0, 3))*box[i][0].vertices[0][3])/tempDouble)*0.8 + 150)*1.0)+400+180, (int)(((((box[i][0].getMatrix().get(2, 0))*box[i][0].vertices[0][0] + 
-                           (box[i][0].getMatrix().get(2, 1))*box[i][0].vertices[0][1] +
-                           (box[i][0].getMatrix().get(2, 2))*box[i][0].vertices[0][2] +
-                           (box[i][0].getMatrix().get(2, 3))*box[i][0].vertices[0][3])/tempDouble)*0.8 + 150)*1.0)-60-20, 5, 5);
-               } if(box[i][1].isVisible == true){
-                   g.setColor(Color.blue);
-                   
-                   g.fillOval((int)(dx[i]*0.8+150+400+180),(int)(dz[i]*0.8+150-60-20),5,5);
+	           for(int i=0; i<enemyNumber; i++){
+	               if(box[i][0].isVisible == true){
+	                   g.setColor(Color.RED);
+	                   double tempDouble = (box[i][0].getMatrix().get(3, 0))*box[i][0].vertices[0][0] + 
+	                   (box[i][0].getMatrix().get(3, 1))*box[i][0].vertices[0][1] +
+	                   (box[i][0].getMatrix().get(3, 2))*box[i][0].vertices[0][2] +
+	                   (box[i][0].getMatrix().get(3, 3))*box[i][0].vertices[0][3];
+	                   
+	                   g.fillOval((int)(((((box[i][0].getMatrix().get(0, 0))*box[i][0].vertices[0][0] + 
+	                           (box[i][0].getMatrix().get(0, 1))*box[i][0].vertices[0][1] +
+	                           (box[i][0].getMatrix().get(0, 2))*box[i][0].vertices[0][2] +
+	                           (box[i][0].getMatrix().get(0, 3))*box[i][0].vertices[0][3])/tempDouble)*0.8 + 150)*1.0)+400+180, (int)(((((box[i][0].getMatrix().get(2, 0))*box[i][0].vertices[0][0] + 
+	                           (box[i][0].getMatrix().get(2, 1))*box[i][0].vertices[0][1] +
+	                           (box[i][0].getMatrix().get(2, 2))*box[i][0].vertices[0][2] +
+	                           (box[i][0].getMatrix().get(2, 3))*box[i][0].vertices[0][3])/tempDouble)*0.8 + 150)*1.0)-60-20, 5, 5);
+	               } 
+	               if(box[i][1].isVisible == true){
+	                   g.setColor(Color.blue);
+	                   
+	                   g.fillOval((int)(dx[i]*0.8+150+400+180),(int)(dz[i]*0.8+150-60-20),5,5);
+	               }
+               if (time - levelUpTimer < levelUpTime){
+            	   g.setFont(Font3);
+            	   g.setColor(Color.yellow);
+            	   g.drawString("Level Up!", W/2-180, H/2);
                }
+            	   
                
-               
-           }
-           g.setColor(Color.green);
-           g.fillOval((int)(145*1.0)+400+180+2, (int)(150*1.0)-60-20-1, 5, 5);
+	           }
+	           g.setColor(Color.green);
+	           g.fillOval((int)(145*1.0)+400+180+2, (int)(150*1.0)-60-20-1, 5, 5);
 
            }
            
@@ -978,6 +1058,7 @@ public class game_new extends RenderApplet{
 		           	   g.setColor(new Color(200,Math.min(255,50+3*i),0));
 		           	   g.fillRect(50+3*i, 100, 3, 14);
 		          }
+	              g.setFont(Font2);
 	              g.setColor(Color.white);
 	              g.drawRect(50, 70, 300, 14);
 	              g.drawRect(50, 100, 300, 14);
