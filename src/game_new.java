@@ -66,9 +66,11 @@ public class game_new extends RenderApplet{
 	double pumpkin_vecs[][] = new double[pumpkinSections*pumpkinSections][5]; // x, y, z, u, v
 	double warningTimer = 0;
 	double levelUpTimer = 0;
+	
 	boolean isCapturedClick = true;
 	boolean isShoot[] = new boolean[enemyNumber];
 	boolean showWarning = false;
+	boolean isAlarm = false;
 	
 	Material boxColor, pumpkinColor1, springColor, stalkColor,lineColor,wallColor,groundColor;
 	Material gunColor,barrelColor,gunheadColor,gunRing1Color,gunRing2Color,gunRing3Color,laserColor,gunWingColor;
@@ -106,6 +108,8 @@ public class game_new extends RenderApplet{
 	AudioClip blowup = null;
 	AudioClip levelUpSound = null;
 	AudioClip wLaugh = null;
+	AudioClip alarm = null;
+	AudioClip hit = null;
 	JOrbisBGM bgm = null;
 	Image bg1,bg2;
 	
@@ -224,6 +228,12 @@ public class game_new extends RenderApplet{
 		}
 		if (wLaugh == null) {
 			wLaugh = getAudioClip(getCodeBase(), "sounds/wLaugh.wav");
+		}
+		if (hit == null) {
+			hit = getAudioClip(getCodeBase(), "sounds/hit.wav");
+		}
+		if (alarm == null) {
+			alarm = getAudioClip(getCodeBase(), "sounds/alarm.wav");
 		}
 		if (bgm == null) {
 			bgm = new JOrbisBGM();
@@ -385,7 +395,7 @@ public class game_new extends RenderApplet{
 
 		    isMiss = new boolean[enemyNumber];
 		    c = 0;
-		    
+		    isAlarm = false;
 		   for (int i=0;i<enemyNumber;i++)
 			   Y[i] = Math.random();
 		   //when does the enemy start to come out
@@ -600,9 +610,9 @@ public class game_new extends RenderApplet{
 					   m.rotateY(-angle);
 					   m.translate(0, lTime*6, -ringRadius);
 					   if (lTime<levelUpTime/2)
-						   m.scale(1.5,1.2*lTime*6,.5);
+						   m.scale(1.8,1.2*lTime*6,.5);
 					   else
-						   m.scale(1.5, 1.2*(levelUpTime-lTime)*6, .5);
+						   m.scale(1.8, 1.2*(levelUpTime-lTime)*6, .5);
 //					   double scale = lTime/levelUpTime;
 //					   lvlUpAniPieceColor1.setAmbient(0, scale/2, 1-scale/2);
 //					   lvlUpAniPieceColor1.setDiffuse(0, scale/2, 1-scale/2);
@@ -658,19 +668,30 @@ public class game_new extends RenderApplet{
 			   }
 			   
 			   if(totalLife >0 && totalLife <= 30){
+				   if (!isAlarm){
+					   alarm.loop();
+					   isAlarm = true;
+				   }
+				   
 				   if (time - warningTimer > 2*warningTime){
 					   warningTimer = time;
 				   }
-				   if(time - warningTimer <= warningTime)
+				   else if(time - warningTimer <= warningTime)
 					   showWarning = true;
-				   if(time - warningTimer > warningTime && time - warningTimer < 2*warningTime){
+				   else if(time - warningTimer > warningTime && time - warningTimer < 2*warningTime){
 					   showWarning = false;
 				   }
 			
 				   
 			   }
-			   else 
+			   else {
+//				   if (isAlarm){
+					   alarm.stop();
+					   isAlarm = false;
+//				   }
 				   showWarning = false;
+				   
+			   }
 			   //rotate camera
 			   m = getRenderer().getCamera();
 			   m.identity();
@@ -834,13 +855,16 @@ public class game_new extends RenderApplet{
 		    	  if (dx[i]*dx[i]+dz[i]*dz[i]<(5*5)){ // if one cross the bar
 		    		  if (isShoot[i] == false && isMiss[i] == false && gameState == 0){
 		    			  miss++;
+		    			  
 		    			  if (box[i][0].isVisible == true )
-		    			  {
+		    			  {		
+		    				  hit.play();
 		    				  totalLife = totalLife-5;
 			    			  ouchTimer = ouchTime;
 		    			  }
 		    			  else if (box[i][1].isVisible == true )
-		    			  {
+		    			  {	
+		    				  hit.play();
 		    				  totalLife = totalLife-10;
 			    			  ouchTimer = ouchTime;
 		    			  }
