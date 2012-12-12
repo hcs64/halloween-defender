@@ -33,7 +33,8 @@ public class game_new extends RenderApplet{
 	Font Font1 = new Font("Broadway", Font.BOLD, 26);
 	Font Font2 = new Font("Broadway", Font.BOLD, 12);
 	Font Font3 = new Font("Broadway", Font.BOLD, 72);
-	int enemyNumber = 3;
+	static final int firstEnemyNumber = 3;
+	int enemyNumber = firstEnemyNumber;
 	int springNumber = 10;
 	int pumpkinNumber = 4;
 	int pumpkinSections = 4;
@@ -51,7 +52,8 @@ public class game_new extends RenderApplet{
 	int H, W; //window size
 	int mouseX, mouseY; //mouse position
 	
-	double chargeRate = .15; // energy charges rate
+	final double defaultChargeRate = 0.5;
+	double chargeRate = defaultChargeRate; // energy charges rate
 	double reloadCount = 0;
 	double previousTime = 0;
 	double turningAngle = 0;
@@ -590,7 +592,7 @@ public class game_new extends RenderApplet{
 //		   gunColor.setAmbient(gunEnergy/100, 1, 1);
 		   
 		   if (gameState != 0 && reStart == 1){
-			   enemyNumber = 3;
+			   enemyNumber = firstEnemyNumber;
 		    	score = 0;
 		    	levelScore = 10;
 		    	miss = 0;
@@ -683,14 +685,14 @@ public class game_new extends RenderApplet{
 					  totalLife = 100;
 					  gunEnergy = 100;
 					  level++;
-					  enemyNumber++;
+					  enemyNumber = firstEnemyNumber + level/3;
 					  levelUpSound.play();
 					  newGame();
 					  
 			   }
 			   
 			   if(totalLife >0 && totalLife <= 30){
-				   chargeRate = .075;
+				   chargeRate = .1;
 				   if (!isAlarm){
 					   alarm.loop();
 					   isAlarm = true;
@@ -708,7 +710,7 @@ public class game_new extends RenderApplet{
 				   
 			   }
 			   else {
-				   	chargeRate = .15;
+				   	chargeRate = defaultChargeRate;
 //				   if (isAlarm){
 					   alarm.stop();
 					   isAlarm = false;
@@ -1210,7 +1212,7 @@ public class game_new extends RenderApplet{
 		  runTime[i] = time;
 		  //dx[i] = (i-enemyNumber/2)*8/(1+(time-runTime[i])/4);
 	 	  //dz[i] = -startDist+5*(time-runTime[i]);
-		  double enemyArc = (2. - ( 1.5*3./(enemyNumber-1) ))*Math.PI;
+		  double enemyArc = (2. - ( 1.5*3./(level+1) ))*Math.PI;
 		  enemyAngle[i] = i*enemyArc/(enemyNumber-1) - (enemyArc+Math.PI)/2.;
 		  
 	 	  dx[i] = Math.cos(enemyAngle[i])*startDist;
