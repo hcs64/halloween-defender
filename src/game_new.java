@@ -78,6 +78,7 @@ public class game_new extends RenderApplet{
 	Material boxColor, pumpkinColor1, springColor, stalkColor,lineColor,wallColor,groundColor;
 	Material gunColor,barrelColor,gunheadColor,gunRing1Color,gunRing2Color,gunRing3Color,laserColor,gunWingColor;
 	Material pumpkinFadeColor[] = new Material[enemyNumber];
+	Material ghostFadeColor[] = new Material[enemyNumber];
 	Material shirtColor, skinColor, bodyColor, eyeColor;	// ghost
 	Material lvlUpAniPieceColor1;
 	Material lvlUpAniPieceColor2[] = new Material[lvlUpAniPieceNum];
@@ -294,6 +295,12 @@ public class game_new extends RenderApplet{
 		bodyColor.setAmbient(0.4, 0.4,0.4);
 		bodyColor.setDiffuse(0.8, 0.8, 0.75);
 		bodyColor.setSpecular(0,0,0,1);
+		
+		for (int i = 0; i < enemyNumber; i++){
+			ghostFadeColor[i] = new Material();
+			ghostFadeColor[i].copy(bodyColor);
+			ghostFadeColor[i].setTransparency(0.);
+		}
    
 		// Eye Color
 		eyeColor = new Material();
@@ -362,6 +369,7 @@ public class game_new extends RenderApplet{
 			pumpkin = new Geometry[pumpkinNumber*enemyNumber];
 			pumpkin_vecs = new double[pumpkinSections*pumpkinSections][5];
 			pumpkinFadeColor = new Material[enemyNumber];
+			ghostFadeColor = new Material[enemyNumber];
 			//ghost
 			body = new Geometry[enemyNumber];
 			shoulder_r = new Geometry[enemyNumber];
@@ -408,7 +416,12 @@ public class game_new extends RenderApplet{
 		   //is miss counted or not
 		   for (int i=0;i<isMiss.length;i++)
 			   isMiss[i] = false;
-	            
+		   
+		   for (int i = 0; i < enemyNumber; i++){
+			  ghostFadeColor[i] = new Material();
+		   	  ghostFadeColor[i].copy(bodyColor);
+		   	  ghostFadeColor[i].setTransparency(0.);
+		     }	            
 	      for (int i = 0; i < enemyNumber; i++){
 	    	  pumpkinFadeColor[i] = new Material();
 	    	  pumpkinFadeColor[i].copy(pumpkinColor1);
@@ -826,13 +839,26 @@ public class game_new extends RenderApplet{
 		    		  double[] ghostTrans = new double[3];	// side-to-side motion is along this vector
 		    		  Vec.set(ghostTrans, Math.cos(enemyAngle[i]+Math.PI/2.)*swayScale, 0,
 		    				  Math.sin(enemyAngle[i]+Math.PI/2.)*swayScale);
+		    		  
+		    		  // fade in
+		    		  if (t < 0.5)
+		    		  {
+		    			  body[i].setMaterial(ghostFadeColor[i]);
+
+		    			  ghostFadeColor[i].setTransparency(Math.min(1, 1-(t/.5)));
+		    		  }
+		    		  else
+		    		  {
+		    			  body[i].setMaterial(bodyColor);
+		    		  }
+
 	//
 		    		  if (enemySpeed[i] != 0)
 		    		  {
 		    			  dx[i] = ghostFocus[0]+ghostTrans[0];
 		    		  	dz[i] = ghostFocus[2]+ghostTrans[2];
 		    		  }
-	
+		    		  
 		    		  m = box[i][1].getMatrix();
 		    		  m.identity();
 		    		  m.translate(dx[i], 0, dz[i]);
@@ -848,11 +874,13 @@ public class game_new extends RenderApplet{
 					  	m.identity();
 					  	m.translate(0.35,0.8,-0.35);
 					  	m.scale(0.25,0.25,0.25);
+			    		eye_r[i].setMaterial(eyeColor);
 					  	
 					  	m = eye_l[i].getMatrix();
 					  	m.identity();
 					  	m.translate(-0.35,0.8,-0.35);
 					  	m.scale(0.25,0.25,0.25);
+					  	eye_l[i].setMaterial(eyeColor);
 					  	
 					  	m = shoulder_r[i].getMatrix();
 					  	m.identity();
