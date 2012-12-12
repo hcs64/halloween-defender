@@ -438,7 +438,7 @@ public class game_new extends RenderApplet{
 	      	
 //	      	wall = getWorld().add().torus(16, 16, .2);
 //	      	wall.setMaterial(wallColor);
-	      	ground = getWorld().add().cube();
+	      	ground = getWorld().add().disk(20);
 	      	ground.setMaterial(groundColor);
 	      	line = getWorld().add().torus(8, 8, .2);
 	      	line.setMaterial(lineColor);
@@ -446,6 +446,7 @@ public class game_new extends RenderApplet{
 	      //cube for box->first torus for spring->rest toruses for spring->all spheres for pumpkin->cylinder for stalk
 	      //add all boxes to world
 	      	
+	      	/*
 	      	String wcs = null;
 	      	
 	      	try {
@@ -457,6 +458,7 @@ public class game_new extends RenderApplet{
 	      	} catch (IOException e) {
 	      		e.printStackTrace();
 	      	}
+	      	*/
 	      	for (int i=0;i<box.length;i++){
 	      	box[i][0] = getWorld().add().cube();
 	      	
@@ -484,10 +486,12 @@ public class game_new extends RenderApplet{
 	          previousTime = time;
 	      	
 	      }
+	      	/*
 	      	obj1 = box[0][0].add(Obj.newObj(wcs));
 	      	Obj.normalizeSize(obj1);
 	      	obj1.getMatrix().scale(2.0);
 	      	obj1.setMaterial(pumpkinColor1);
+	      	*/
 	      	
 	      	//add first torus to box
 	      for (int i=0;i<enemyNumber;i++){
@@ -598,7 +602,7 @@ public class game_new extends RenderApplet{
 			   gameState = 0; 
 			   newGame();
 			  for (int i=0;i<enemyNumber;i++)
-				  runTime[i]=time;
+				  runTime[i]=time+i*1.;
 		   }
 		   else if (gameState == 2 && reStart == 0){
 			   
@@ -747,8 +751,9 @@ public class game_new extends RenderApplet{
 //		    m.scale(60,60,200);
 		    m = ground.getMatrix();
 		    m.identity();
+		    m.scale(startDist,1,startDist);
 		    m.translate(0, -3.5, 0);
-		    m.scale(100,.2,100);
+		    m.rotateX(-Math.PI/2.);
 		    
 		    if (ouchTimer > 0 || ouchScale > 0)
 		    {
