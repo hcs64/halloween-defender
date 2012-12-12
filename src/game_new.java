@@ -171,20 +171,27 @@ public class game_new extends RenderApplet{
 				gunShot.play();
 				if (g == null)
 					return true;
-				for (int i=0;i<stalk.length;i++){
-					if((g==stalk[i] || g.isDescendant(box[i][1])) && isShoot[i] == false){
-						isShoot[i] = true;
-						clickTime[i] = time;
-						score=score+2;
-		//				totalLife = totalLife + 10;
-		//				System.out.print("stalk shot");
+
+				for (int i=0;i<pumpkin.length;i++){
+					if (box[(int)i/pumpkinNumber][0].isVisible) {
+						// shooting a pumpkin
+						if (g.isDescendant(pumpkin[i]) && isShoot[(int)i/pumpkinNumber] == false){
+							isShoot[(int)i/pumpkinNumber] = true;
+							clickTime[(int)i/pumpkinNumber] = time;
+							score++;
+						}
 					}
 				}
-				for (int i=0;i<pumpkin.length;i++){
-					if (g.isDescendant(pumpkin[i]) && isShoot[(int)i/pumpkinNumber] == false){
-						isShoot[(int)i/pumpkinNumber] = true;
-						clickTime[(int)i/pumpkinNumber] = time;
-						score++;
+				for (int i = 0;i<enemyNumber;i++) {
+					if (box[i][1].isVisible) {
+						// shooting a ghost
+						if (g.isDescendant(box[i][1]) && isShoot[i] == false){
+							isShoot[i] = true;
+							clickTime[i] = time;
+							score++;
+							// get some energy
+							gunEnergy = Math.min(gunEnergy+10, 100);
+						}
 					}
 				}
 			}
