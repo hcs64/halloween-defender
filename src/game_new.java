@@ -601,6 +601,7 @@ public class game_new extends RenderApplet{
 			   reStart = 0;
 			   gameState = 0; 
 			   newGame();
+			   levelUpTimer = time-(levelUpTime*2.);
 			  for (int i=0;i<enemyNumber;i++)
 				  runTime[i]=time+i*1.;
 		   }
@@ -608,7 +609,7 @@ public class game_new extends RenderApplet{
 			   
 			   totalLife = -1;
 		   }
-		   else{//game playing!! animation playing in game should be here 
+		   if (gameState == 0){//game playing!! animation playing in game should be here 
 			   //m = obj1.getMatrix();
 			   //m.translate(0,10, 0);
 //			   obj1.
