@@ -1196,11 +1196,22 @@ public class game_new extends RenderApplet{
 		      m.identity();
 		      m.translate(0, .2, 1);
 		      m.scale(.1,.6,.6);
-		      if (time-c>.5)
-		    	  c = time;
-		      gunRing1Color.setAmbient((time-c)*2, (time-c)*2, 0);
-		      gunRing2Color.setAmbient(0, (time-c)*2, 0);
-		      gunRing3Color.setAmbient(0, (time-c)*2, (time-c)*2);
+		      
+		      if (gunEnergy >= shootEnergy)
+		      {
+			      if (time-c>.5)
+			    	  c = time;
+			      gunRing1Color.setAmbient((time-c)*2, (time-c)*2, 0);
+			      gunRing2Color.setAmbient(0, (time-c)*2, 0);
+			      gunRing3Color.setAmbient(0, (time-c)*2, (time-c)*2);
+	   		}
+		      else
+		      {
+		    	  // show dimmed when out of energy
+		    	  gunRing1Color.setAmbient(.1,.1,0);
+		    	  gunRing2Color.setAmbient(0,.1,0);
+		    	  gunRing3Color.setAmbient(0,.1,.1);
+		      }
 
 		    //set laser
 		      m = laser.getMatrix();
