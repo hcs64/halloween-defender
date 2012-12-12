@@ -603,7 +603,7 @@ public class game_new extends RenderApplet{
 			   newGame();
 			   levelUpTimer = time-(levelUpTime*2.);
 			  for (int i=0;i<enemyNumber;i++)
-				  runTime[i]=time+i*1.;
+				  runTime[i]=time+2;
 		   }
 		   else if (gameState == 2 && reStart == 0){
 			   
@@ -752,7 +752,7 @@ public class game_new extends RenderApplet{
 //		    m.scale(60,60,200);
 		    m = ground.getMatrix();
 		    m.identity();
-		    m.scale(startDist,1,startDist);
+		    m.scale(startDist-3,1,startDist-3);
 		    m.translate(0, -3.5, 0);
 		    m.rotateX(-Math.PI/2.);
 		    
@@ -805,7 +805,7 @@ public class game_new extends RenderApplet{
 		
 			    	  if (t < Math.PI){
 				    	  // first big bounce (from below playfield)
-			    		  m.translate(dx[i], 3*Math.abs(Math.sin(t))-7+4*t/Math.PI, dz[i]);
+			    		  m.translate(dx[i], 3*Math.abs(Math.sin(t))-8+5*t/Math.PI, dz[i]);
 			    	  } else {
 			    		  m.translate(dx[i], -3+3*Math.abs(Math.sin(t)), dz[i]);
 			    	  }
