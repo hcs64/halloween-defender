@@ -189,8 +189,8 @@ public class game_new extends RenderApplet{
 							isShoot[i] = true;
 							clickTime[i] = time;
 							score++;
-							// get some energy
-							gunEnergy = Math.min(gunEnergy+10, 100);
+							// get some energy back for hitting a ghost
+							gunEnergy = Math.min(gunEnergy+shootEnergy*2, 100);
 						}
 					}
 				}
