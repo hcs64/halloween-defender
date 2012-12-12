@@ -182,8 +182,6 @@ public class game_new extends RenderApplet{
 					}
 				}
 			}
-			else 
-				System.out.print("run out of energy");
 		}
 		return true;
 	}
@@ -1114,10 +1112,20 @@ public class game_new extends RenderApplet{
         			   g.fillRect(30+3*i, 90, 3, 14);
 	               }
         	   }
-	              for (int i=0;i<gunEnergy;i++){
-		           	   g.setColor(new Color(200,Math.min(255,50+3*i),0));
-		           	   g.fillRect(30+3*i, 110, 3, 14);
-		          }
+        	   
+        	   	  if (gunEnergy < shootEnergy) {
+		              for (int i=0;i<gunEnergy;i++){
+			           	   g.setColor(Color.white);
+			           	   g.fillRect(30+3*i, 110, 3, 14);
+			           	   g.drawLine(30+3*shootEnergy, 110, 30+3*shootEnergy, 124);
+			          }
+        	   	  }
+        	   	  else {
+		              for (int i=0;i<gunEnergy;i++){
+			           	   g.setColor(new Color(200,Math.min(255,50+3*i),0));
+			           	   g.fillRect(30+3*i, 110, 3, 14);
+			          }
+        	   	  }
 	              
 	              g.setColor(Color.white);
 	              g.drawRect(30, 90, 300, 14);
@@ -1128,8 +1136,8 @@ public class game_new extends RenderApplet{
 	              g.drawString("level: "+ level, 50, 30);
 	              g.drawString(""+score, W/2, 70);
 	              g.setFont(Font2);
-	              g.drawString("Energy: "+gunEnergy, 40, 122);
-	              g.drawString("Life: "+ totalLife, 40, 102);
+	              g.drawString("Energy: "+gunEnergy, 60, 122);
+	              g.drawString("Life: "+ totalLife, 60, 102);
 	              
            
            
