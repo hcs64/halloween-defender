@@ -117,6 +117,8 @@ public class game_new extends RenderApplet{
 	JOrbisBGM bgm = null;
 	Image bg1,bg2;
 	
+	Color sightColor = Color.white;
+	
 	public boolean keyDown(Event evt, int key){
 		if (key == 'A' || key == 'a'){
 			leftKey = 1;
@@ -416,6 +418,8 @@ public class game_new extends RenderApplet{
 		   //is miss counted or not
 		   for (int i=0;i<isMiss.length;i++)
 			   isMiss[i] = false;
+		   
+		   gunEnergy = 100;
 		   
 		   for (int i = 0; i < enemyNumber; i++){
 			  ghostFadeColor[i] = new Material();
@@ -1112,7 +1116,8 @@ public class game_new extends RenderApplet{
            }
            
            if( gameState == 2 ){
-         	  
+        	   sightColor = Color.white;
+        	  
         	   g.drawImage(bg1, 0, 0, null);
         	   g.setFont(bigFont);
         	   g.setColor(Color.orange);
@@ -1122,6 +1127,7 @@ public class game_new extends RenderApplet{
 	                  
            }
            else if ( gameState == 1 ){
+        	   sightColor = Color.white;
         	   g.drawImage(bg2, 0, 0, null);
                g.setFont(bigFont);
                g.setColor(Color.orange);
@@ -1142,13 +1148,16 @@ public class game_new extends RenderApplet{
         	   }
         	   
         	   	  if (gunEnergy < shootEnergy) {
+        	   		  sightColor = Color.red;
+
 		              for (int i=0;i<gunEnergy;i++){
-			           	   g.setColor(Color.white);
+			           	   g.setColor(Color.red);
 			           	   g.fillRect(30+3*i, 110, 3, 14);
 			           	   g.drawLine(30+3*shootEnergy, 110, 30+3*shootEnergy, 124);
 			          }
         	   	  }
         	   	  else {
+        	   		  sightColor = Color.white;
 		              for (int i=0;i<gunEnergy;i++){
 			           	   g.setColor(new Color(200,Math.min(255,50+3*i),0));
 			           	   g.fillRect(30+3*i, 110, 3, 14);
@@ -1178,7 +1187,7 @@ public class game_new extends RenderApplet{
 	              }
            }
            //draw the front sight
-           g.setColor(Color.white);
+           g.setColor(sightColor);
            g.drawOval(mouseX-50, mouseY-50, 100, 100);
            g.drawLine(mouseX-50, mouseY, mouseX+50, mouseY);
            g.drawLine(mouseX, mouseY-50, mouseX, mouseY+50);
