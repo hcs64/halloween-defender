@@ -1001,12 +1001,10 @@ public class game_new extends RenderApplet{
 		    			  box[i][1].setVisible(false);
 		    			  isShoot[i] = false;
 		    			  if (Math.random()<.5){ //they have 50% chance to go back to the origin and appear again; or they have to wait until they cross the bar
-		    				  System.out.println("instant respawn "+i);
 		    				  respawn(i, .7);
 		    			  }
 		    			  else
 		    			  {
-		    				  System.out.println("defer respawn "+i);
 		    				  dx[i]=0;
 		    				  dz[i]=0;
 		    			  }
@@ -1029,12 +1027,10 @@ public class game_new extends RenderApplet{
 		    			  
 			    		  isShoot[i] = false;
 			    		  if (Math.random()<.5){ //they have 50% chance to go back to the origin and appear again; or they have to wait until they cross the bar
-			    			  System.out.println("instant respawn "+i);
 			    			  respawn(i, .7);
 			    		  }
 			    		  else
 			    		  {
-			    			  System.out.println("defer respawn "+i);
 			    			  dx[i]=0;
 			    			  dz[i]=0;
 			    		  }

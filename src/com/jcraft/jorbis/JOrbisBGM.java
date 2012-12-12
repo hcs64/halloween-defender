@@ -292,6 +292,7 @@ public class JOrbisBGM implements Runnable {
 				oy.wrote(bytes);
 			}
 
+			/*
 			{
 				byte[][] ptr=vc.user_comments;
 
@@ -306,6 +307,7 @@ public class JOrbisBGM implements Runnable {
 				System.err.println("Encoded by: "
 						+new String(vc.vendor, 0, vc.vendor.length-1)+"\n");
 			}
+			*/
 
 			convsize=BUFSIZE/vi.channels;
 
@@ -464,8 +466,6 @@ public class JOrbisBGM implements Runnable {
 
 		if(is==null)
 			return null;
-
-		System.out.println("Select: "+url);
 
 		int i=0;
 		String s=null;
