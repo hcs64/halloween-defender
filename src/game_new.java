@@ -46,7 +46,7 @@ public class game_new extends RenderApplet{
 	int level = 1;
 	int gameState = 2; // 0:game playing 1:game over 2:game initialized
 	int reStart = 0;
-	int turn = 0, leftKey = 0, rightKey = 0;
+	int turn = 0, leftKey = 0, rightKey = 0, turnAround = 0;
 	int gunEnergy = 100;
 	int shootEnergy = 8; //energy consumed per shot
 	int H, W; //window size
@@ -129,6 +129,9 @@ public class game_new extends RenderApplet{
 			rightKey = 1;
 			turn = 1;
 			turnStartTime = time;
+		}
+		if (key == ' '){
+			turnAround = 1;
 		}
 			
 		return true;
@@ -685,7 +688,14 @@ public class game_new extends RenderApplet{
 			   reloadCount = reloadCount + time - previousTime;
 			   previousTime = time;
 			   
-			   if (turn != 0)
+			   if (turnAround == 1)
+			   {
+				   turningAngle = turningAngle + Math.PI;
+				   if (turningAngle > Math.PI*2.)
+					   turningAngle -= Math.PI*2.;
+				   turnAround = 0;
+			   }
+			   else if (turn != 0)
 			   {
 				   turningAngle += turn * Math.PI/2. * (time-turnStartTime);
 				   turnStartTime = time;
