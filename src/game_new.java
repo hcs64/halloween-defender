@@ -13,6 +13,7 @@ import java.applet.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import render.*;
+
 import com.jcraft.jorbis.JOrbisBGM;
 
 public class game_new extends RenderApplet{
@@ -82,6 +83,7 @@ public class game_new extends RenderApplet{
 	Material shirtColor, skinColor, bodyColor, eyeColor;	// ghost
 	Material lvlUpAniPieceColor1;
 	Material lvlUpAniPieceColor2[] = new Material[lvlUpAniPieceNum];
+	Material houseColor;
 	
 	Geometry box[][] = new Geometry[enemyNumber][2];
 	Geometry stalk[] = new Geometry[enemyNumber];
@@ -102,10 +104,10 @@ public class game_new extends RenderApplet{
 	Geometry lvlUpAniPiece1[] = new Geometry[lvlUpAniPieceNum];
 //	Geometry lvlUpAniPiece2[] = new Geometry[lvlUpAniPieceNum];
 	Geometry g = new Geometry();
-	Geometry obj1;
+	Geometry obj1, obj2, obj3, obj4, obj5, obj6, obj7, obj8;
 	Matrix m;
 	
-
+	URL url1, url2, url3;
 	Texture texture;
 	
 	AudioClip gunShot = null;
@@ -300,7 +302,12 @@ public class game_new extends RenderApplet{
 		gunWingColor.setAmbient(.7, .7, .7);
 		gunWingColor.setDiffuse(.1, .1, .1);
 		gunWingColor.setSpecular(.1, .1, .1, 20);
-	      
+		
+		
+		houseColor = new Material();
+		houseColor.setAmbient(.3, .1, .3);
+		houseColor.setDiffuse(.5, .3, .5);
+		houseColor.setSpecular(.5, .3, .5, 20);  
 	      //ghost
 	      // Body Color
 		bodyColor = new Material();
@@ -473,8 +480,8 @@ public class game_new extends RenderApplet{
 	      //cube for box->first torus for spring->rest toruses for spring->all spheres for pumpkin->cylinder for stalk
 	      //add all boxes to world
 	      	
-	      	/*
-	      	String wcs = null;
+	      	
+	      	/*String wcs = null;
 	      	
 	      	try {
 	      		InputStream wcstream = getClass().getResource("wateringcan.obj").openStream();
@@ -484,8 +491,8 @@ public class game_new extends RenderApplet{
     		    
 	      	} catch (IOException e) {
 	      		e.printStackTrace();
-	      	}
-	      	*/
+	      	}*/
+	      	
 	      	for (int i=0;i<box.length;i++){
 	      	box[i][0] = getWorld().add().cube();
 	      	
@@ -513,12 +520,87 @@ public class game_new extends RenderApplet{
 	          previousTime = time;
 	      	
 	      }
-	      	/*
-	      	obj1 = box[0][0].add(Obj.newObj(wcs));
+	      	
+	      	try {
+				url1 = new URL(getCodeBase(), "objs/obj2.obj");
+				url2 = new URL(getCodeBase(), "objs/casaobj.obj");
+				url3 = new URL(getCodeBase(), "objs/treeobj.obj");
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	      	
+	      	double a = Math.PI/10;
+	      	obj1 = getWorld().add(Obj.newObj(Util.load(url1)));
 	      	Obj.normalizeSize(obj1);
-	      	obj1.getMatrix().scale(2.0);
-	      	obj1.setMaterial(pumpkinColor1);
-	      	*/
+	      	m = obj1.getMatrix();
+	      	m.translate(0, 0, -55);
+	      	m.rotateX(-Math.PI/2);
+	      	m.scale(5.0);
+	      	obj1.setMaterial(houseColor);
+	      	
+	      	obj2 = getWorld().add(Obj.newObj(Util.load(url2)));
+	      	Obj.normalizeSize(obj2);
+	      	m = obj2.getMatrix();
+	      	m.rotateY(2*a);
+	      	m.translate(0, -1, -55);
+	      	m.rotateY(-Math.PI/2);
+	      	m.scale(4.0);
+	      	obj2.setMaterial(houseColor);
+	      	
+	      	obj3 = getWorld().add(Obj.newObj(Util.load(url1)));
+	      	Obj.normalizeSize(obj3);
+	      	m = obj3.getMatrix();
+	      	m.rotateY(3*a);
+	      	m.translate(0, 0, -55);
+	      	m.rotateX(-Math.PI/2);
+	      	m.scale(5.5);
+	      	obj3.setMaterial(houseColor);
+	      	
+	      	obj4 = getWorld().add(Obj.newObj(Util.load(url1)));
+	      	Obj.normalizeSize(obj4);
+	      	m = obj4.getMatrix();
+	      	m.rotateY(7*a);
+	      	m.translate(0, 0, -55);
+	      	m.rotateX(-Math.PI/2);
+	      	m.scale(5.0);
+	      	obj4.setMaterial(houseColor);
+	      	
+	      	obj5 = getWorld().add(Obj.newObj(Util.load(url1)));
+	      	Obj.normalizeSize(obj5);
+	      	m = obj5.getMatrix();
+	      	m.rotateY(-6*a);
+	      	m.translate(0, -1, -55);
+	      	m.rotateX(-Math.PI/2);
+	      	m.scale(4.0);
+	      	obj5.setMaterial(houseColor);
+	      	
+	      	obj6 = getWorld().add(Obj.newObj(Util.load(url2)));
+	      	Obj.normalizeSize(obj6);
+	      	m = obj6.getMatrix();
+	      	m.rotateY(10*a);
+	      	m.translate(0, -1, -55);
+	      	m.rotateY(-Math.PI/2);
+	      	m.scale(4.0);
+	      	obj6.setMaterial(houseColor);
+	      	
+	      	obj7 = getWorld().add(Obj.newObj(Util.load(url2)));
+	      	Obj.normalizeSize(obj7);
+	      	m = obj7.getMatrix();
+	      	m.rotateY(-3*a);
+	      	m.translate(0, -1, -55);
+	      	m.rotateY(-Math.PI/2);
+	      	m.scale(4.0);
+	      	obj7.setMaterial(houseColor);
+	      	
+	      	obj8 = getWorld().add(Obj.newObj(Util.load(url2)));
+	      	Obj.normalizeSize(obj8);
+	      	m = obj8.getMatrix();
+	      	m.rotateY(11*a);
+	      	m.translate(0, -1, -55);
+	      	m.rotateY(-Math.PI/2);
+	      	m.scale(4.0);
+	      	obj8.setMaterial(houseColor);
 	      	
 	      	//add first torus to box
 	      for (int i=0;i<enemyNumber;i++){
