@@ -34,6 +34,8 @@ public class game_new extends RenderApplet{
 	Font Font1 = new Font("Broadway", Font.BOLD, 26);
 	Font Font2 = new Font("Broadway", Font.BOLD, 12);
 	Font Font3 = new Font("Broadway", Font.BOLD, 72);
+	Font Font4 = new Font("Broadway", Font.BOLD, 36);
+	
 	static final int firstEnemyNumber = 3;
 	int enemyNumber = firstEnemyNumber;
 	int springNumber = 10;
@@ -44,6 +46,7 @@ public class game_new extends RenderApplet{
 	int miss = 0;
 	int bullet = 0;
 	int totalLife = 100;
+	int bossHealth = 0;
 	int level = 1;
 	int gameState = 2; // 0:game playing 1:game over 2:game initialized
 	int reStart = 0;
@@ -100,6 +103,8 @@ public class game_new extends RenderApplet{
 	Geometry torso[] = new Geometry[enemyNumber];
 	Geometry hand_r[] = new Geometry[enemyNumber];
 	Geometry hand_l[] = new Geometry[enemyNumber];
+	//witch
+	Geometry witch = null;
 	//level up animation
 	Geometry lvlUpAniPiece1[] = new Geometry[lvlUpAniPieceNum];
 //	Geometry lvlUpAniPiece2[] = new Geometry[lvlUpAniPieceNum];
@@ -112,6 +117,7 @@ public class game_new extends RenderApplet{
 	
 	AudioClip gunShot = null;
 	AudioClip blowup = null;
+	AudioClip wLaughShort = null;
 	AudioClip levelUpSound = null;
 	AudioClip wLaugh = null;
 	AudioClip alarm = null;
@@ -196,6 +202,18 @@ public class game_new extends RenderApplet{
 						}
 					}
 				}
+				if (box[0].length > 2 && box[0][2].isVisible) {
+					if (g.isDescendant(box[0][2]) && isShoot[0] == false){
+						isShoot[0] = true;
+						clickTime[0] = time;
+						//score++;
+						bossHealth -= 10;
+						if (bossHealth <= 0)
+						{
+							score = levelScore;
+						}
+					}
+				}
 			}
 		}
 		return true;
@@ -244,6 +262,9 @@ public class game_new extends RenderApplet{
 		}
 		if (wLaugh == null) {
 			wLaugh = getAudioClip(getCodeBase(), "sounds/wlaugh.wav");
+		}
+		if (wLaughShort == null) {
+			wLaughShort = getAudioClip(getCodeBase(), "sounds/wlaughshort.wav");
 		}
 		if (hit == null) {
 			hit = getAudioClip(getCodeBase(), "sounds/hit.wav");
@@ -381,7 +402,7 @@ public class game_new extends RenderApplet{
 	   
 	   
 	   public void newGame() {
-		   
+		    
 		    box = new Geometry[enemyNumber][2];
 			stalk = new Geometry[enemyNumber];
 			spring = new Geometry[springNumber*enemyNumber];
@@ -399,6 +420,9 @@ public class game_new extends RenderApplet{
 			hand_r = new Geometry[enemyNumber];
 			hand_l = new Geometry[enemyNumber];
 			//obj1 = new Geometry();
+			
+			witch = new TexturedMesh("images/apogeewitch.gif");
+			witch.material.setTransparency(1./1000);
 			
 			
 			lvlUpAniPiece1 = new Geometry[lvlUpAniPieceNum];
@@ -479,6 +503,8 @@ public class game_new extends RenderApplet{
 	      //the Hierarchy of the enemy
 	      //cube for box->first torus for spring->rest toruses for spring->all spheres for pumpkin->cylinder for stalk
 	      //add all boxes to world
+
+
 	      	
 	      	
 	      	/*String wcs = null;
@@ -521,6 +547,29 @@ public class game_new extends RenderApplet{
 	      	
 	      }
 	      	
+	      	// boss
+	      	if (enemyNumber == 1) {
+	      		Geometry [] oldarr = box[0];
+	      		box[0] = new Geometry[4];
+	      		box[0][0] = oldarr[0];
+	      		box[0][0].setVisible(false);
+	      		box[0][1] = oldarr[1];
+	      		box[0][1].setVisible(false);
+	      		box[0][2] = witch;
+	      		box[0][2].setVisible(true);
+	      		getWorld().add(witch);
+	      		box[0][3] = getWorld().add().sphere(5);
+	      		box[0][3].setVisible(false);
+	      		
+	      		Material witchOuch = new Material();
+	      		witchOuch.setAmbient(.9,.3,0);
+	      		witchOuch.setDiffuse(.9,.3,0);
+	      		witchOuch.setTransparency(.3);
+	      		box[0][3].setMaterial(witchOuch);
+	      		
+	      		bossHealth = 100;
+	      	}
+	      	
 	      	try {
 				url1 = new URL(getCodeBase(), "objs/obj2.obj");
 				url2 = new URL(getCodeBase(), "objs/casaobj.obj");
@@ -548,14 +597,14 @@ public class game_new extends RenderApplet{
 	      	m.scale(4.0);
 	      	obj2.setMaterial(houseColor);
 	      	
-	      	obj3 = getWorld().add(Obj.newObj(Util.load(url1)));
-	      	Obj.normalizeSize(obj3);
-	      	m = obj3.getMatrix();
-	      	m.rotateY(3*a);
-	      	m.translate(0, 0, -55);
-	      	m.rotateX(-Math.PI/2);
-	      	m.scale(5.5);
-	      	obj3.setMaterial(houseColor);
+	      	//obj3 = getWorld().add(Obj.newObj(Util.load(url1)));
+	      	//Obj.normalizeSize(obj3);
+	      	//m = obj3.getMatrix();
+	      	//m.rotateY(3*a);
+	      	//m.translate(0, 0, -55);
+	      	//m.rotateX(-Math.PI/2);
+	      	//m.scale(5.5);
+	      	//obj3.setMaterial(houseColor);
 	      	
 	      	obj4 = getWorld().add(Obj.newObj(Util.load(url1)));
 	      	Obj.normalizeSize(obj4);
@@ -575,14 +624,14 @@ public class game_new extends RenderApplet{
 	      	m.scale(4.0);
 	      	obj5.setMaterial(houseColor);
 	      	
-	      	obj6 = getWorld().add(Obj.newObj(Util.load(url2)));
-	      	Obj.normalizeSize(obj6);
-	      	m = obj6.getMatrix();
-	      	m.rotateY(10*a);
-	      	m.translate(0, -1, -55);
-	      	m.rotateY(-Math.PI/2);
-	      	m.scale(4.0);
-	      	obj6.setMaterial(houseColor);
+	      	//obj6 = getWorld().add(Obj.newObj(Util.load(url2)));
+	      	//Obj.normalizeSize(obj6);
+	      	//m = obj6.getMatrix();
+	      	//m.rotateY(10*a);
+	      	//m.translate(0, -1, -55);
+	      	//m.rotateY(-Math.PI/2);
+	      	//m.scale(4.0);
+	      	//obj6.setMaterial(houseColor);
 	      	
 	      	obj7 = getWorld().add(Obj.newObj(Util.load(url2)));
 	      	Obj.normalizeSize(obj7);
@@ -671,9 +720,12 @@ public class game_new extends RenderApplet{
 
 	     
 	      
-	      for (int i = 0; i < enemyNumber; i++)
+	      if (enemyNumber > 1)
 	      {
-	    	  respawn(i, 1);
+		      for (int i = 0; i < enemyNumber; i++)
+		      {
+		    	  respawn(i, 1);
+		      }
 	      }
 	      
 	      
@@ -799,7 +851,15 @@ public class game_new extends RenderApplet{
 					  totalLife = 100;
 					  gunEnergy = 100;
 					  level++;
-					  enemyNumber = firstEnemyNumber + level/3;
+					  if (level == 2){
+						  enemyNumber = firstEnemyNumber;
+					  } else if (level == 3 || level == 4){
+						  enemyNumber = firstEnemyNumber+1;
+					  } else if (level == 5) {
+						  enemyNumber = 1; // boss
+					  } else {
+						  enemyNumber = firstEnemyNumber+(level-3);
+					  }
 					  levelUpSound.play();
 					  newGame();
 					  
@@ -1004,9 +1064,35 @@ public class game_new extends RenderApplet{
 					  	m.translate(-0.4, 0.1, 0);
 				      	m.rotateY(-Math.PI*8/12);
 				      	m.scale(0.3,0.25,0.60);
-		    	  }
-		      }
-		      
+		    	  }else if (box[i].length > 2 && box[i][2].isVisible) {
+			    	  // boss (witch)
+		    		  double dist = startDist;
+		    		  
+		    		  	double t = time-runTime[i];
+		    		  	enemyAngle[i] = t;
+		    		  	enemyAngle[i] -= Math.floor(enemyAngle[i]/(Math.PI*2))*(Math.PI*2);
+		    		  
+			      		Matrix m = box[i][2].getMatrix();
+			      		
+			      		m.identity();
+			      		
+			      		dx[i] = Math.sin(enemyAngle[i])*dist;
+		    		  	dz[i] = -Math.cos(enemyAngle[i])*dist;
+		    		  	
+		    		  	m.rotateY(-enemyAngle[i]);
+		    		  	m.translate(0, Math.sin(t)*10, -dist);
+			      		m.scale(5);
+			      		
+			      		// put ouchy in the right place
+			      		m = box[i][3].getMatrix();
+			      		m.identity();
+			      		m.rotateY(-enemyAngle[i]);
+			      		m.translate(0, Math.sin(t)*10, -dist);
+			      		//m.scale(5);
+			    		
+			      }
+
+		      } 		      
 		      for (int i=0;i<enemyNumber;i++){
 		    	  if (dx[i]*dx[i]+dz[i]*dz[i]<(5*5)){ // if one cross the bar
 		    		  if (isShoot[i] == false && isMiss[i] == false && gameState == 0){
@@ -1167,6 +1253,20 @@ public class game_new extends RenderApplet{
 			    		  }
 			    	  }
 			      }
+		    	  // what if the witch gets shot
+			      else if (box[i].length > 2 && box[i][2].isVisible && isShoot[i] == true)
+			      {
+		    		  if (time-clickTime[i]<explodeTime){ // blast!
+		    			  if (!box[i][3].isVisible) {
+		    				  wLaughShort.play();
+		    				  box[i][3].setVisible(true);
+		    			  }
+		    			  box[i][3].getMatrix().scale((time-clickTime[i])/explodeTime*10.);
+		    		  } else {
+		    			  box[i][3].setVisible(false);
+		    			  isShoot[i] = false;
+		    		  }			    	  
+			      }
 			   }
 		   }
 	   }
@@ -1200,6 +1300,10 @@ public class game_new extends RenderApplet{
 	                   g.setColor(Color.blue);
 	                   
 	                   g.fillOval((int)(dx[i]*0.8+150+400+180),(int)(dz[i]*0.8+150-60-20),5,5);
+	               }
+	               if(box[i].length > 2 && box[i][2].isVisible == true){
+	            	   g.setColor(Color.orange);
+	            	   g.fillOval((int)(dx[i]*0.8+150+400+180),(int)(dz[i]*0.8+150-60-20),5,5);
 	               }
                if (time - levelUpTimer < levelUpTime){
             	   g.setFont(Font3);
@@ -1245,6 +1349,19 @@ public class game_new extends RenderApplet{
         			   g.fillRect(30+3*i, 90, 3, 14);
 	               }
         	   }
+        	   if (bossHealth > 0)
+        	   {
+	    		   for (int i=0;i<bossHealth;i++){
+	    			   g.setColor(new Color(Math.max(0,(255-3*i)),Math.min(255,0+3*i),0));
+	    			   g.fillRect(380+3*i, 90, 3, 14);
+	               }
+	    		   
+		              g.setColor(Color.white);
+		              g.drawRect(380, 90, 300, 14);
+		              
+		              g.setFont(Font2);
+		              g.drawString("Boss: "+ bossHealth, 410, 102);
+        	   }
         	   
         	   	  if (gunEnergy < shootEnergy) {
         	   		  sightColor = Color.red;
@@ -1268,7 +1385,17 @@ public class game_new extends RenderApplet{
 	              g.drawRect(30, 110, 300, 14);
 	              
 	              g.setFont(Font1);
-	              g.drawString("NEXT LEVEL: "+levelScore, W/2-100, 30);
+	              
+	               if (time - levelUpTimer < levelUpTime){
+	            	   g.setFont(Font4);
+	            	   g.setColor(Color.yellow);
+	            	   
+	            	   g.drawString("NEXT LEVEL: "+levelScore, W/2-180, H/2+72);
+	            	   g.setFont(Font1);
+	               }	              
+	               else {
+	            	   g.drawString("NEXT LEVEL: "+levelScore, W/2-100, 30);
+	               }
 	              g.drawString("level: "+ level, 50, 30);
 	              g.drawString(""+score, W/2, 70);
 	              g.setFont(Font2);
