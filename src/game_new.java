@@ -112,7 +112,7 @@ public class game_new extends RenderApplet{
 	Geometry obj1, obj2, obj3, obj4, obj5, obj6, obj7, obj8;
 	Matrix m;
 	
-	URL url1, url2, url3;
+	URL url1, url2;
 	Texture texture;
 	
 	AudioClip gunShot = null;
@@ -252,33 +252,33 @@ public class game_new extends RenderApplet{
 		setCursor(transparentCursor);   
 		   
 		if (gunShot == null) {
-			gunShot = getAudioClip(getCodeBase(), "sounds/LASER.wav");
+			gunShot = getAudioClip(getClass().getResource("sounds/LASER.wav"));
 		}
 		if (blowup == null) {
-			blowup = getAudioClip(getCodeBase(), "sounds/pop8.wav");
+			blowup = getAudioClip(getClass().getResource("sounds/pop8.wav"));
 		}
 		if (levelUpSound == null) {
-			levelUpSound = getAudioClip(getCodeBase(), "sounds/levelup.wav");
+			levelUpSound = getAudioClip(getClass().getResource("sounds/levelup.wav"));
 		}
 		if (wLaugh == null) {
-			wLaugh = getAudioClip(getCodeBase(), "sounds/wlaugh.wav");
+			wLaugh = getAudioClip(getClass().getResource("sounds/wlaugh.wav"));
 		}
 		if (wLaughShort == null) {
-			wLaughShort = getAudioClip(getCodeBase(), "sounds/wlaughshort.wav");
+			wLaughShort = getAudioClip(getClass().getResource("sounds/wlaughshort.wav"));
 		}
 		if (hit == null) {
-			hit = getAudioClip(getCodeBase(), "sounds/hit.wav");
+			hit = getAudioClip(getClass().getResource("sounds/hit.wav"));
 		}
 		if (alarm == null) {
-			alarm = getAudioClip(getCodeBase(), "sounds/alarm.wav");
+			alarm = getAudioClip(getClass().getResource("sounds/alarm.wav"));
 		}
 		if (bgm == null) {
 			bgm = new JOrbisBGM();
 			bgm.set_URL(getClass().getResource("sounds/SD2D_22.ogg"));
 			new Thread(bgm).start();
 		}
-		bg1 = Toolkit.getDefaultToolkit().getImage("images/bg1.jpg");
-		bg2 = Toolkit.getDefaultToolkit().getImage("images/bg2.jpg");
+		bg1 = Toolkit.getDefaultToolkit().getImage(getClass().getResource("images/bg1.jpg"));
+		bg2 = Toolkit.getDefaultToolkit().getImage(getClass().getResource("images/bg2.jpg"));
 		   
 		getRenderer().setH(600);
 		getRenderer().setW(800);
@@ -421,7 +421,12 @@ public class game_new extends RenderApplet{
 			hand_l = new Geometry[enemyNumber];
 			//obj1 = new Geometry();
 			
-			witch = new TexturedMesh("images/apogeewitch.gif");
+			try {
+				witch = new TexturedMesh(new Texture(getClass().getResource("images/apogeewitch.gif"), "Witch"),2,2);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			witch.material.setTransparency(1./1000);
 			
 			
@@ -507,18 +512,6 @@ public class game_new extends RenderApplet{
 
 	      	
 	      	
-	      	/*String wcs = null;
-	      	
-	      	try {
-	      		InputStream wcstream = getClass().getResource("wateringcan.obj").openStream();
-	      		byte [] wcb = new byte [wcstream.available()];
-	      		wcstream.read(wcb);
-	      		wcs = new String(wcb);
-    		    
-	      	} catch (IOException e) {
-	      		e.printStackTrace();
-	      	}*/
-	      	
 	      	for (int i=0;i<box.length;i++){
 	      	box[i][0] = getWorld().add().cube();
 	      	
@@ -570,14 +563,8 @@ public class game_new extends RenderApplet{
 	      		bossHealth = 100;
 	      	}
 	      	
-	      	try {
-				url1 = new URL(getCodeBase(), "objs/obj2.obj");
-				url2 = new URL(getCodeBase(), "objs/casaobj.obj");
-				url3 = new URL(getCodeBase(), "objs/treeobj.obj");
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			url1 = getClass().getResource("objs/obj2.obj");
+			url2 = getClass().getResource("objs/casaobj.obj");
 	      	
 	      	double a = Math.PI/10;
 	      	obj1 = getWorld().add(Obj.newObj(Util.load(url1)));
@@ -1400,6 +1387,7 @@ public class game_new extends RenderApplet{
 	            	   
 	            	   g.drawString("NEXT LEVEL: "+levelScore, W/2-180, H/2+72);
 	            	   g.setFont(Font1);
+	            	   g.setColor(Color.white);
 	               }	              
 	               else {
 	            	   g.drawString("NEXT LEVEL: "+levelScore, W/2-100, 30);
