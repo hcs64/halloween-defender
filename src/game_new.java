@@ -47,7 +47,7 @@ public class game_new extends RenderApplet{
 	int bullet = 0;
 	int totalLife = 100;
 	int bossHealth = 0;
-	int level = 5; //1;
+	int level = 1;
 	int gameState = 2; // 0:game playing 1:game over 2:game initialized
 	int reStart = 0;
 	int turn = 0, leftKey = 0, rightKey = 0, turnAround = 0;
@@ -751,13 +751,13 @@ public class game_new extends RenderApplet{
 //		   gunColor.setAmbient(gunEnergy/100, 1, 1);
 		   
 		   if (gameState != 0 && reStart == 1){
-			   enemyNumber = 1; //firstEnemyNumber;
+			   enemyNumber = firstEnemyNumber;
 		    	score = 0;
 		    	levelScore = 10;
 		    	miss = 0;
 		    	bullet = 0;
 		    	totalLife = 100;
-		    	level = 5; //1;
+		    	level = 1;
 		    	turningAngle = 0;
 			   reStart = 0;
 			   gameState = 0; 
