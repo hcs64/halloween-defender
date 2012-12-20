@@ -47,7 +47,7 @@ public class game_new extends RenderApplet{
 	int bullet = 0;
 	int totalLife = 100;
 	int bossHealth = 0;
-	int level = 1;
+	int level = 5; //1;
 	int gameState = 2; // 0:game playing 1:game over 2:game initialized
 	int reStart = 0;
 	int turn = 0, leftKey = 0, rightKey = 0, turnAround = 0;
@@ -751,13 +751,13 @@ public class game_new extends RenderApplet{
 //		   gunColor.setAmbient(gunEnergy/100, 1, 1);
 		   
 		   if (gameState != 0 && reStart == 1){
-			   enemyNumber = firstEnemyNumber;
+			   enemyNumber = 1; //firstEnemyNumber;
 		    	score = 0;
 		    	levelScore = 10;
 		    	miss = 0;
 		    	bullet = 0;
 		    	totalLife = 100;
-		    	level = 1;
+		    	level = 5; //1;
 		    	turningAngle = 0;
 			   reStart = 0;
 			   gameState = 0; 
@@ -1069,6 +1069,7 @@ public class game_new extends RenderApplet{
 		    		  double dist = startDist;
 		    		  
 		    		  	double t = time-runTime[i];
+		    		  	double oldAngle = enemyAngle[i];
 		    		  	enemyAngle[i] = t;
 		    		  	enemyAngle[i] -= Math.floor(enemyAngle[i]/(Math.PI*2))*(Math.PI*2);
 		    		  
@@ -1080,16 +1081,23 @@ public class game_new extends RenderApplet{
 		    		  	dz[i] = -Math.cos(enemyAngle[i])*dist;
 		    		  	
 		    		  	m.rotateY(-enemyAngle[i]);
-		    		  	m.translate(0, Math.sin(t)*10, -dist);
+		    		  	m.translate(0, Math.sin(t*5)*3, -dist);
 			      		m.scale(5);
 			      		
 			      		// put ouchy in the right place
 			      		m = box[i][3].getMatrix();
 			      		m.identity();
 			      		m.rotateY(-enemyAngle[i]);
-			      		m.translate(0, Math.sin(t)*10, -dist);
-			      		//m.scale(5);
+			      		m.translate(0, Math.sin(t*5)*3, -dist);
 			    		
+			      		// hurt player once per orbit
+		    			if (oldAngle > enemyAngle[i])
+		    			{		
+		    			  hit.play();
+		    			  totalLife = totalLife-5;
+			    		  ouchTimer = ouchTime;
+		    			}
+
 			      }
 
 		      } 		      
